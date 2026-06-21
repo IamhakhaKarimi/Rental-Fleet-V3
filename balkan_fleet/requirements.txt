@@ -1,0 +1,10 @@
+# Pinned to the exact versions this build was tested against, so the app behaves
+# the same on your machine as in testing. (Avoids breakage from newer releases.)
+streamlit==1.58.0
+SQLAlchemy==2.0.51
+pandas==3.0.2
+bcrypt==5.0.0
+extra-streamlit-components==0.1.81
+# NOTE: streamlit-option-menu was removed — on Streamlit 1.58 its component
+# iframe collapses to 0px height, hiding the whole nav. The top navigation is now
+# built from native st.button widgets in ui/nav.py (no third-party component).
