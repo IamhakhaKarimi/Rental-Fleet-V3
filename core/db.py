@@ -32,8 +32,13 @@ def get_engine() -> Engine:
         @event.listens_for(_engine, "connect")
         def _set_sqlite_pragmas(dbapi_conn, _):
             cur = dbapi_conn.cursor()
-            cur.execute("PRAGMA foreign_keys = ON")
-            cur.execute("PRAGMA journal_mode = WAL")
+            cur.execute("PRAGMA foreign_keys = ON")      # referential integrity
+            cur.execute("PRAGMA journal_mode = WAL")     # concurrent reads during writes
+            cur.execute("PRAGMA synchronous = NORMAL")   # safe under WAL, far faster writes
+            cur.execute("PRAGMA busy_timeout = 5000")    # wait up to 5s for a lock instead of erroring
+            cur.execute("PRAGMA temp_store = MEMORY")    # keep temp b-trees in RAM
+            cur.execute("PRAGMA cache_size = -16000")    # ~16 MB page cache per connection
+            cur.execute("PRAGMA mmap_size = 134217728")  # 128 MB memory-mapped I/O
             cur.close()
 
     return _engine
@@ -73,6 +78,10 @@ def init_db():
     # Make sure at least one super-admin exists so the app can be logged into.
     from services.auth_service import ensure_default_admin
     ensure_default_admin()
+    # Hygiene/security: drop expired remember-me sessions so the table can't grow
+    # unbounded and stale tokens can't linger. Cheap (indexed) and idempotent.
+    from data.repositories.users import purge_expired_sessions
+    purge_expired_sessions()
 
 
 def _migrate_users():

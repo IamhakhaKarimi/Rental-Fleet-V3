@@ -234,7 +234,7 @@ UI = {
     "invoice_balance":   "Saldo dovuto",
     "invoice_thanks":    "Grazie per averci scelto.",
     "invoice_print":     "🖨️ Stampa fattura",
-    "invoice_download":  "⬇️ Scarica fattura (HTML)",
+    "invoice_download":  "⬇️ Scarica fattura (PDF)",
     "invoice_ready":     "Fattura pronta — stampala o scaricala qui sotto.",
     "invoice_signed":    "Contratto firmato",
     "invoice_unsigned":  "Contratto non firmato",
@@ -365,6 +365,32 @@ UI = {
     "status_updated":        "Stato aggiornato.",
     "edit_btn":              "Modifica",
     "last_super_admin":      "Impossibile rimuovere l'ultimo super amministratore.",
+    # finance totals + year lock + return activity (v3.0 round 4)
+    "fin_totals":            "Totali",
+    "set_licensed_year_label":"Imposta anno con licenza",
+    "licensed_year_saved":   "Anno con licenza aggiornato.",
+    "return_activity":       "Annulla attività",
+    "activity_returned":     "Attività annullata.",
+    "return_activity_help":  "Ripristina veicoli archiviati e noleggi annullati.",
+    # customers split (round 5)
+    "active_renters":        "Noleggiatori attivi",
+    "no_active_renters":     "Nessun cliente sta noleggiando al momento.",
+    "all_customers":         "Tutti i clienti",
+    "open_customer":         "Apri cliente",
+    # reset data + visitor hero — round 6
+    "danger_zone":           "Zona pericolosa",
+    "reset_finance_btn":     "Reimposta dati finanziari",
+    "reset_fleet_btn":       "Reimposta dati flotta",
+    "reset_finance_help":    "Elimina tutti i record di entrate (addebiti) e costi. Veicoli e noleggi vengono mantenuti.",
+    "reset_fleet_help":      "Elimina tutti i veicoli, foto, noleggi e relativi dati finanziari. I clienti vengono mantenuti. La flotta predefinita viene ricaricata al prossimo riavvio.",
+    "reset_confirm_label":   "Digita RESET per confermare",
+    "reset_done":            "Dati reimpostati.",
+    "visitor_hero":          "Sfoglia le auto disponibili",
+    "visitor_hero_sub":      "Scegli l'auto giusta dalla nostra flotta. Contatta il nostro team per prenotare.",
+    "contact_to_book":       "Contattaci per prenotare",
+    # sidebar toggle (round 7)
+    "open_sidebar":          "Apri barra laterale",
+    "collapse_sidebar":      "Comprimi barra laterale",
 }
 
 TERMS = {

@@ -26,6 +26,8 @@ PERMISSION_MIN_LEVEL = {
     "view_dashboard": 0,        # everyone
     "view_reservations": 0,     # everyone may look
     "view_fleet": 0,
+    "view_management": 1,       # employer and up — gates the Reservations/Fleet/
+                                # Customers pages so visitors see no management UI
     "create_reservation": 1,    # employer and up
     "cancel_reservation": 1,    # employer and up
     "edit_fleet": 2,            # admin and up

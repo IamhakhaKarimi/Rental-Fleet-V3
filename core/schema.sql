@@ -127,7 +127,10 @@ CREATE TABLE IF NOT EXISTS licenses (
 
 CREATE INDEX IF NOT EXISTS idx_rentals_vehicle  ON rentals(vehicle_id);
 CREATE INDEX IF NOT EXISTS idx_rentals_status   ON rentals(status);
+CREATE INDEX IF NOT EXISTS idx_rentals_customer ON rentals(customer_id);
 CREATE INDEX IF NOT EXISTS idx_rentals_interval ON rentals(vehicle_id, start_dt, end_dt);
 CREATE INDEX IF NOT EXISTS idx_charges_deal     ON charges(deal_id);
+CREATE INDEX IF NOT EXISTS idx_charges_vehicle  ON charges(vehicle_id);
 CREATE INDEX IF NOT EXISTS idx_costs_vehicle    ON vehicle_costs(vehicle_id, period_date);
 CREATE INDEX IF NOT EXISTS idx_vphotos_vehicle  ON vehicle_photos(vehicle_id, position, photo_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);

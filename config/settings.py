@@ -18,7 +18,7 @@ SEED_CSV = BASE_DIR / "fleet_master.csv"        # one-time vehicle seed source
 # --- Brand -------------------------------------------------------------------
 APP_NAME = "Balkan Car Rentals"
 APP_TAGLINE = "Fleet Console"
-APP_VERSION = "3.0"
+APP_VERSION = "3.2"
 PAGE_ICON = "🚗"
 
 # --- Languages ---------------------------------------------------------------
@@ -36,6 +36,9 @@ LANGUAGES = {
     "sq": "🇦🇱 Shqip",
 }
 STAFF_ONLY_LANGS = {"sq"}
+# Fallback UI/invoice language. Lives here (Streamlit-free) so the service and
+# data layers can validate/normalise a language without importing Streamlit.
+DEFAULT_LANG = "tr"
 
 # --- Currency ----------------------------------------------------------------
 # All money is stored in the database as INTEGER cents and only converted to a

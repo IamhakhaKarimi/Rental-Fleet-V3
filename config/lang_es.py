@@ -234,7 +234,7 @@ UI = {
     "invoice_balance":   "Saldo pendiente",
     "invoice_thanks":    "Gracias por su confianza.",
     "invoice_print":     "🖨️ Imprimir factura",
-    "invoice_download":  "⬇️ Descargar factura (HTML)",
+    "invoice_download":  "⬇️ Descargar factura (PDF)",
     "invoice_ready":     "Factura lista — imprímala o descárguela a continuación.",
     "invoice_signed":    "Contrato firmado",
     "invoice_unsigned":  "Contrato no firmado",
@@ -365,6 +365,32 @@ UI = {
     "status_updated":        "Estado actualizado.",
     "edit_btn":              "Editar",
     "last_super_admin":      "No se puede eliminar el último superadministrador.",
+    # finance totals + year lock + return activity (v3.0 round 4)
+    "fin_totals":            "Totales",
+    "set_licensed_year_label":"Establecer año con licencia",
+    "licensed_year_saved":   "Año con licencia actualizado.",
+    "return_activity":       "Revertir actividad",
+    "activity_returned":     "Actividad revertida.",
+    "return_activity_help":  "Restaurar vehículos archivados y alquileres cancelados.",
+    # customers split (round 5)
+    "active_renters":        "Clientes con alquiler activo",
+    "no_active_renters":     "Ningún cliente tiene un alquiler activo.",
+    "all_customers":         "Todos los clientes",
+    "open_customer":         "Abrir cliente",
+    # reset data + visitor hero — round 6
+    "danger_zone":           "Zona de peligro",
+    "reset_finance_btn":     "Restablecer datos financieros",
+    "reset_fleet_btn":       "Restablecer datos de flota",
+    "reset_finance_help":    "Elimina todos los registros de ingresos (cargos) y costos. Se conservan vehículos y alquileres.",
+    "reset_fleet_help":      "Elimina todos los vehículos, fotos, alquileres y sus registros financieros. Se conservan los clientes. La flota predeterminada se recarga al reiniciar.",
+    "reset_confirm_label":   "Escribe RESET para confirmar",
+    "reset_done":            "Datos restablecidos.",
+    "visitor_hero":          "Explora nuestros coches disponibles",
+    "visitor_hero_sub":      "Elige el coche adecuado de nuestra flota. Contacta con nuestro equipo para reservar.",
+    "contact_to_book":       "Contáctanos para reservar",
+    # sidebar toggle (round 7)
+    "open_sidebar":          "Abrir barra lateral",
+    "collapse_sidebar":      "Contraer barra lateral",
 }
 
 TERMS = {

@@ -1,7 +1,9 @@
 """Bilingual support: Turkish / English. Every string lives here."""
 import streamlit as st
 
-DEFAULT_LANG = "tr"
+# Single source of truth lives in the Streamlit-free settings module; re-exported
+# here so existing `from config.i18n import DEFAULT_LANG` call sites keep working.
+from config.settings import DEFAULT_LANG
 
 TRANSLATIONS = {
     "tr": {
@@ -237,7 +239,7 @@ TRANSLATIONS = {
         "invoice_balance":   "Kalan / Ödenecek",
         "invoice_thanks":    "Bizi tercih ettiğiniz için teşekkür ederiz.",
         "invoice_print":     "🖨️ Faturayı Yazdır",
-        "invoice_download":  "⬇️ Faturayı İndir (HTML)",
+        "invoice_download":  "⬇️ Faturayı İndir (PDF)",
         "invoice_ready":     "Fatura hazır — aşağıdan yazdırabilir veya indirebilirsiniz.",
         "invoice_signed":    "Sözleşme imzalandı",
         "invoice_unsigned":  "Sözleşme imzalanmadı",
@@ -368,6 +370,32 @@ TRANSLATIONS = {
         "status_updated":        "Durum güncellendi.",
         "edit_btn":              "Düzenle",
         "last_super_admin":      "Son süper yöneticiyi kaldıramazsınız.",
+        # finance totals + year lock + return activity (v3.0 round 4)
+        "fin_totals":            "Toplam",
+        "set_licensed_year_label":"Lisanslı yılı belirle",
+        "licensed_year_saved":   "Lisanslı yıl güncellendi.",
+        "return_activity":       "İşlemi Geri Al",
+        "activity_returned":     "İşlem geri alındı.",
+        "return_activity_help":  "Arşivlenen araçları ve iptal edilen kiralamaları geri alabilirsiniz.",
+        # customers split: active renters (cards) vs finished (table) — round 5
+        "active_renters":        "Aktif Kiralayanlar",
+        "no_active_renters":     "Şu anda aktif kiralayan müşteri yok.",
+        "all_customers":         "Tüm Müşteriler",
+        "open_customer":         "Müşteri Aç",
+        # reset data (danger zone) + visitor hero — round 6
+        "danger_zone":           "Tehlikeli Bölge",
+        "reset_finance_btn":     "Finans Verilerini Sıfırla",
+        "reset_fleet_btn":       "Filo Verilerini Sıfırla",
+        "reset_finance_help":    "Tüm gelir (tahsilat) ve gider kayıtlarını siler. Araçlar ve kiralamalar korunur.",
+        "reset_fleet_help":      "Tüm araçları, fotoğrafları, kiralamaları ve ilgili mali kayıtları siler. Müşteriler korunur. Yeniden başlatıldığında varsayılan filo yeniden yüklenir.",
+        "reset_confirm_label":   "Onaylamak için RESET yazın",
+        "reset_done":            "Veriler sıfırlandı.",
+        "visitor_hero":          "Müsait Araçları Keşfedin",
+        "visitor_hero_sub":      "Filomuzdan size en uygun aracı seçin. Rezervasyon için ekibimizle iletişime geçin.",
+        "contact_to_book":       "Rezervasyon için bizimle iletişime geçin",
+        # sidebar toggle (round 7)
+        "open_sidebar":          "Menüyü aç",
+        "collapse_sidebar":      "Menüyü daralt",
     },
     "en": {
         "nav_dashboard":     "Home",
@@ -602,7 +630,7 @@ TRANSLATIONS = {
         "invoice_balance":   "Balance Due",
         "invoice_thanks":    "Thank you for your business.",
         "invoice_print":     "🖨️ Print Invoice",
-        "invoice_download":  "⬇️ Download Invoice (HTML)",
+        "invoice_download":  "⬇️ Download Invoice (PDF)",
         "invoice_ready":     "Invoice ready — print or download it below.",
         "invoice_signed":    "Contract signed",
         "invoice_unsigned":  "Contract not signed",
@@ -733,6 +761,32 @@ TRANSLATIONS = {
         "status_updated":        "Status updated.",
         "edit_btn":              "Edit",
         "last_super_admin":      "Cannot remove the last super-admin.",
+        # finance totals + year lock + return activity (v3.0 round 4)
+        "fin_totals":            "Totals",
+        "set_licensed_year_label":"Set licensed year",
+        "licensed_year_saved":   "Licensed year updated.",
+        "return_activity":       "Return Activity",
+        "activity_returned":     "Activity reverted.",
+        "return_activity_help":  "Restore archived vehicles and cancelled rentals.",
+        # customers split: active renters (cards) vs finished (table) — round 5
+        "active_renters":        "Active Renters",
+        "no_active_renters":     "No customers are currently renting.",
+        "all_customers":         "All Customers",
+        "open_customer":         "Open Customer",
+        # reset data (danger zone) + visitor hero — round 6
+        "danger_zone":           "Danger Zone",
+        "reset_finance_btn":     "Reset Finance Data",
+        "reset_fleet_btn":       "Reset Fleet Data",
+        "reset_finance_help":    "Deletes all income (charges) and cost records. Vehicles and rentals are kept.",
+        "reset_fleet_help":      "Deletes all vehicles, photos, rentals and their financial records. Customers are kept. The default fleet re-seeds on next restart.",
+        "reset_confirm_label":   "Type RESET to confirm",
+        "reset_done":            "Data reset.",
+        "visitor_hero":          "Browse Our Available Cars",
+        "visitor_hero_sub":      "Pick the right car from our fleet. Contact our team to book.",
+        "contact_to_book":       "Contact us to book",
+        # sidebar toggle (round 7)
+        "open_sidebar":          "Open sidebar",
+        "collapse_sidebar":      "Collapse sidebar",
     },
 }
 

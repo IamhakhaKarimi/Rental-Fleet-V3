@@ -234,7 +234,7 @@ UI = {
     "invoice_balance":   "Offener Betrag",
     "invoice_thanks":    "Vielen Dank für Ihr Vertrauen.",
     "invoice_print":     "🖨️ Rechnung drucken",
-    "invoice_download":  "⬇️ Rechnung herunterladen (HTML)",
+    "invoice_download":  "⬇️ Rechnung herunterladen (PDF)",
     "invoice_ready":     "Rechnung bereit — drucken oder unten herunterladen.",
     "invoice_signed":    "Vertrag unterschrieben",
     "invoice_unsigned":  "Vertrag nicht unterschrieben",
@@ -365,6 +365,32 @@ UI = {
     "status_updated":        "Status aktualisiert.",
     "edit_btn":              "Bearbeiten",
     "last_super_admin":      "Der letzte Super-Administrator kann nicht entfernt werden.",
+    # finance totals + year lock + return activity (v3.0 round 4)
+    "fin_totals":            "Summen",
+    "set_licensed_year_label":"Lizenzjahr festlegen",
+    "licensed_year_saved":   "Lizenzjahr aktualisiert.",
+    "return_activity":       "Aktion zurücksetzen",
+    "activity_returned":     "Aktion zurückgesetzt.",
+    "return_activity_help":  "Archivierte Fahrzeuge und stornierte Mieten wiederherstellen.",
+    # customers split (round 5)
+    "active_renters":        "Aktive Mieter",
+    "no_active_renters":     "Derzeit mietet kein Kunde.",
+    "all_customers":         "Alle Kunden",
+    "open_customer":         "Kunde öffnen",
+    # reset data + visitor hero — round 6
+    "danger_zone":           "Gefahrenzone",
+    "reset_finance_btn":     "Finanzdaten zurücksetzen",
+    "reset_fleet_btn":       "Flottendaten zurücksetzen",
+    "reset_finance_help":    "Löscht alle Einnahmen- (Belastungen) und Kostendatensätze. Fahrzeuge und Mieten bleiben erhalten.",
+    "reset_fleet_help":      "Löscht alle Fahrzeuge, Fotos, Mieten und deren Finanzdaten. Kunden bleiben erhalten. Die Standardflotte wird beim nächsten Neustart neu geladen.",
+    "reset_confirm_label":   "Zur Bestätigung RESET eingeben",
+    "reset_done":            "Daten zurückgesetzt.",
+    "visitor_hero":          "Verfügbare Fahrzeuge entdecken",
+    "visitor_hero_sub":      "Wählen Sie das passende Fahrzeug aus unserer Flotte. Kontaktieren Sie unser Team zur Buchung.",
+    "contact_to_book":       "Kontaktieren Sie uns zum Buchen",
+    # sidebar toggle (round 7)
+    "open_sidebar":          "Seitenleiste öffnen",
+    "collapse_sidebar":      "Seitenleiste einklappen",
 }
 
 TERMS = {

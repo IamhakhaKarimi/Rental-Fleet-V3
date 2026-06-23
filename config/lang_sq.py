@@ -234,7 +234,7 @@ UI = {
     "invoice_balance":   "Bilanci për t'u Paguar",
     "invoice_thanks":    "Faleminderit për besimin tuaj.",
     "invoice_print":     "🖨️ Printo Faturën",
-    "invoice_download":  "⬇️ Shkarko Faturën (HTML)",
+    "invoice_download":  "⬇️ Shkarko Faturën (PDF)",
     "invoice_ready":     "Fatura është gati — printojeni ose shkarkojeni më poshtë.",
     "invoice_signed":    "Kontrata u nënshkrua",
     "invoice_unsigned":  "Kontrata nuk u nënshkrua",
@@ -365,6 +365,32 @@ UI = {
     "status_updated":        "Statusi u përditësua.",
     "edit_btn":              "Redakto",
     "last_super_admin":      "Nuk mund të hiqet super-administratori i fundit.",
+    # finance totals + year lock + return activity (v3.0 round 4)
+    "fin_totals":            "Totalet",
+    "set_licensed_year_label":"Cakto vitin e licencuar",
+    "licensed_year_saved":   "Viti i licencuar u përditësua.",
+    "return_activity":       "Kthe veprimin",
+    "activity_returned":     "Veprimi u kthye.",
+    "return_activity_help":  "Rikthe automjetet e arkivuara dhe qiratë e anuluara.",
+    # customers split (round 5)
+    "active_renters":        "Qiramarrësit aktivë",
+    "no_active_renters":     "Asnjë klient nuk po qiraron aktualisht.",
+    "all_customers":         "Të gjithë klientët",
+    "open_customer":         "Hap klientin",
+    # reset data + visitor hero — round 6
+    "danger_zone":           "Zona e rrezikut",
+    "reset_finance_btn":     "Rivendos të dhënat financiare",
+    "reset_fleet_btn":       "Rivendos të dhënat e flotës",
+    "reset_finance_help":    "Fshin të gjitha të ardhurat (tarifat) dhe shpenzimet. Automjetet dhe qiratë ruhen.",
+    "reset_fleet_help":      "Fshin të gjitha automjetet, fotot, qiratë dhe të dhënat financiare të tyre. Klientët ruhen. Flota e parazgjedhur ringarkohet në rinisjen tjetër.",
+    "reset_confirm_label":   "Shkruaj RESET për të konfirmuar",
+    "reset_done":            "Të dhënat u rivendosën.",
+    "visitor_hero":          "Shfletoni makinat tona të disponueshme",
+    "visitor_hero_sub":      "Zgjidhni makinën e duhur nga flota jonë. Kontaktoni ekipin tonë për të rezervuar.",
+    "contact_to_book":       "Na kontaktoni për të rezervuar",
+    # sidebar toggle (round 7)
+    "open_sidebar":          "Hap menynë",
+    "collapse_sidebar":      "Mbyll menynë",
 }
 
 TERMS = {
