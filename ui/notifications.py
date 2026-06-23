@@ -2,7 +2,7 @@
 Return reminders — a notification bell with a numbered badge.
 
 The bell sits in the top bar for staff (Employee and above). Its badge counts
-rentals that are overdue (🔴 alarm) or due back within 24 h (🟠 alert). Clicking
+rentals that are overdue (:material/error: alarm) or due back within 24 h (:material/schedule: alert). Clicking
 it opens a minimalist popup listing each one with the customer's phone (copyable)
 and one-tap WhatsApp message/call links so staff can chase the return.
 """
@@ -51,7 +51,7 @@ def _notifications_body(active_rentals):
         return
 
     def _row(r, hrs, kind):
-        icon = "🔴" if kind == "overdue" else "🟠"
+        icon = ":material/error: " if kind == "overdue" else ":material/schedule: "
         when = (t("notif_overdue_by") if kind == "overdue" else t("notif_due_in")).format(h=hrs)
         end = (r["end_dt"] or "")[:16].replace("T", " ")
         msg = t("wa_reminder").format(name=r["client_name"], car=r["make_model"], due=end)
@@ -63,16 +63,16 @@ def _notifications_body(active_rentals):
             wa = _wa_link(r.get("phone"), msg)
             if wa:
                 cwa, ccall = st.columns(2)
-                cwa.link_button(f'💬 {t("whatsapp_msg")}', wa, use_container_width=True)
-                ccall.link_button(f'📞 {t("whatsapp_call")}', _wa_link(r.get("phone")),
+                cwa.link_button(f':material/chat: {t("whatsapp_msg")}', wa, use_container_width=True)
+                ccall.link_button(f':material/call: {t("whatsapp_call")}', _wa_link(r.get("phone")),
                                   use_container_width=True)
 
     if overdue:
-        st.markdown(f'#### 🔴 {t("notif_overdue_title")} ({len(overdue)})')
+        st.markdown(f'#### :material/error: {t("notif_overdue_title")} ({len(overdue)})')
         for r, h in overdue:
             _row(r, h, "overdue")
     if soon:
-        st.markdown(f'#### 🟠 {t("notif_due_soon_title").format(n=DUE_SOON_HOURS)} ({len(soon)})')
+        st.markdown(f'#### :material/schedule: {t("notif_due_soon_title").format(n=DUE_SOON_HOURS)} ({len(soon)})')
         for r, h in soon:
             _row(r, h, "due_soon")
 
@@ -82,8 +82,11 @@ def render_bell(user):
     active = rrepo.list_active_rentals_with_vehicle()
     overdue, soon = _classify(active)
     n = len(overdue) + len(soon)
-    # Material line icon (matches the nav rail); append the count when there is one.
-    label = f":material/notifications: {n}" if n else ":material/notifications:"
+    # Material line icon (matches the nav rail) + a text LABEL so the bell reads as a
+    # proper row when the sidebar is expanded (the label is hidden in the collapsed
+    # icon rail by ui/theme.py). The pending count is appended when there is one.
+    text = t("notifications_title")
+    label = f":material/notifications: {text} ({n})" if n else f":material/notifications: {text}"
     btn_type = "primary" if overdue else "secondary"
     if st.button(label, key="notif_bell", help=t("notifications_title"),
                  type=btn_type, use_container_width=True):

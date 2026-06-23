@@ -13,7 +13,7 @@ from data.repositories import rentals as rrepo
 
 
 def render_reservations(user):
-    st.title(f"📋 {t('reservations_title')}")
+    st.title(f":material/list: {t('reservations_title')}")
     st.caption(t("reservations_help"))
 
     fleet  = vrepo.list_vehicles()
@@ -22,7 +22,7 @@ def render_reservations(user):
     # (Reminders now live in the top-bar notification bell.)
 
     # ── active rental cards ────────────────────────────────────────────────
-    st.subheader(f"🗂️ {t('active_reservations')} ({len(active)})")
+    st.subheader(f":material/folder_open: {t('active_reservations')} ({len(active)})")
     if not active:
         st.info(t("no_active_reservations"))
 
@@ -30,18 +30,19 @@ def render_reservations(user):
         state, hrs = return_state(r["end_dt"])
         is_overdue = state == "overdue"
         is_soon = state == "due_soon"
-        border_color = "#DC2626" if is_overdue else ("#D97706" if is_soon else "#2563EB")
+        # Overdue = alert red; due-soon + active stay greyscale (darker = nearer due).
+        border_color = "#DC2626" if is_overdue else ("#3F3F46" if is_soon else "#6B7280")
 
         with st.container(border=True):
             # coloured header stripe via markdown
             if is_overdue:
                 badge = (f'<span style="background:#DC2626;color:#fff;padding:2px 8px;'
                          f'border-radius:6px;font-size:12px;font-weight:700">'
-                         f'⚠ {t("overdue_badge")} · {t("overdue_detail").format(h=hrs)}</span>')
+                         f'<span class="msym" style="font-size:13px;vertical-align:-2px">warning</span> {t("overdue_badge")} · {t("overdue_detail").format(h=hrs)}</span>')
             elif is_soon:
-                badge = (f'<span style="background:#D97706;color:#fff;padding:2px 8px;'
+                badge = (f'<span style="background:#3F3F46;color:#fff;padding:2px 8px;'
                          f'border-radius:6px;font-size:12px;font-weight:700">'
-                         f'⏰ {t("due_soon_badge")} · {t("due_soon_detail").format(h=hrs)}</span>')
+                         f'<span class="msym" style="font-size:13px;vertical-align:-2px">schedule</span> {t("due_soon_badge")} · {t("due_soon_detail").format(h=hrs)}</span>')
             else:
                 badge = ""
             st.markdown(
@@ -50,8 +51,8 @@ def render_reservations(user):
             )
 
             ca, cb, cc, cd = st.columns([2.2, 2, 2.4, 1.2])
-            ca.markdown(f'**{r["client_name"]}**  \n📞 {r["phone"]}  \n🪪 {r.get("id_passport","—")}')
-            cb.markdown(f'🚗 **{r["vehicle_id"]}** {r["make_model"]}')
+            ca.markdown(f'**{r["client_name"]}**  \n:material/call: {r["phone"]}  \n:material/badge: {r.get("id_passport","—")}')
+            cb.markdown(f':material/directions_car: **{r["vehicle_id"]}** {r["make_model"]}')
 
             s = r["start_dt"][:16].replace("T", " ")
             e = r["end_dt"][:16].replace("T", " ")
@@ -63,7 +64,7 @@ def render_reservations(user):
             )
 
             if can(user, "cancel_reservation"):
-                if cd.button(f'🚫 {t("cancel_btn")}', key=f'cnc_{r["deal_id"]}',
+                if cd.button(f':material/block: {t("cancel_btn")}', key=f'cnc_{r["deal_id"]}',
                              use_container_width=True):
                     rrepo.cancel_rental(r["deal_id"])
                     audit_service.record(user, "cancel_rental", "rental", r["deal_id"],
@@ -72,7 +73,7 @@ def render_reservations(user):
                     st.rerun()
 
                 # Return / settlement workflow
-                with st.expander(f'🔧 {t("manage_rental")}'):
+                with st.expander(f':material/build: {t("manage_rental")}'):
                     with st.form(f'return_form_{r["deal_id"]}'):
                         rc1, rc2 = st.columns(2)
                         late_eur = rc1.number_input(
@@ -84,7 +85,7 @@ def render_reservations(user):
                         notes = st.text_area(t("return_notes"), key=f'rn_{r["deal_id"]}')
                         signed = st.checkbox(t("contract_signed"), value=True,
                                              key=f'cs_{r["deal_id"]}')
-                        if st.form_submit_button(f'✅ {t("return_btn")}', type="primary"):
+                        if st.form_submit_button(f':material/check_circle: {t("return_btn")}', type="primary"):
                             rrepo.settle_and_close(
                                 r["deal_id"], r["vehicle_id"],
                                 int(late_eur) * 100, int(dmg_eur) * 100,
@@ -98,7 +99,7 @@ def render_reservations(user):
     st.divider()
 
     # ── booking panel (create new rental) ──────────────────────────────────
-    st.subheader(f"➕ {t('quick_register')}")
+    st.subheader(f":material/add: {t('quick_register')}")
     render_booking_panel(user, key_prefix="res")
     st.divider()
 

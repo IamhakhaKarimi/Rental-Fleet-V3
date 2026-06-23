@@ -59,7 +59,7 @@ def kpi_tile(label_key: str, value, accent: bool = False, icon: str = ""):
     """A single headline metric: an uppercase label (with an optional leading
     icon chip aligned right) above a large, tabular-figure value."""
     cls = "kpi accent" if accent else "kpi"
-    chip = f'<span class="kpi-chip">{icon}</span>' if icon else ""
+    chip = f'<span class="kpi-chip"><span class="msym">{html.escape(icon)}</span></span>' if icon else ""
     st.markdown(
         f'<div class="{cls}">'
         f'<div class="kpi-head"><span class="kpi-label">{html.escape(t(label_key))}</span>{chip}</div>'

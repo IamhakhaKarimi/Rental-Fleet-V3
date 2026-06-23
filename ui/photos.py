@@ -76,7 +76,7 @@ def render_photo(b64: str, height: int = 150):
             unsafe_allow_html=True,
         )
     else:
-        st.markdown(f'<div class="car-ph" style="height:{height}px">🚘</div>',
+        st.markdown(f'<div class="car-ph" style="height:{height}px"><span class="msym">directions_car</span></div>',
                     unsafe_allow_html=True)
 
 

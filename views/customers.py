@@ -40,7 +40,7 @@ def _print_langs(user) -> list[str]:
 
 # ─────────────────────────────── page ──────────────────────────────────────
 def render_customers(user):
-    st.title(f"👥 {t('customers_title')}")
+    st.title(f":material/group: {t('customers_title')}")
     st.caption(t("customers_help"))
 
     # One-shot dialog dispatch: an invoice request stashed from inside the
@@ -69,7 +69,7 @@ def render_customers(user):
     finished = [c for c in customers if (c.get("active_count") or 0) == 0]
 
     # ── Active renters — compact card grid ──────────────────────────────────
-    st.subheader(f'🟢 {t("active_renters")} · {len(active)}')
+    st.subheader(f':material/check_circle: {t("active_renters")} · {len(active)}')
     if not active:
         st.caption(t("no_active_renters"))
     else:
@@ -78,7 +78,7 @@ def render_customers(user):
     st.divider()
 
     # ── Everyone else (finished contracts) — the full customers table ───────
-    st.subheader(f'📋 {t("all_customers")} · {len(finished)}')
+    st.subheader(f':material/list: {t("all_customers")} · {len(finished)}')
     if not finished:
         st.caption("—")
         return
@@ -90,7 +90,7 @@ def render_customers(user):
     pick = oc[0].selectbox(t("open_customer"), [c["customer_id"] for c in finished],
                            format_func=lambda i: labels[i], key="fin_pick",
                            label_visibility="collapsed")
-    if oc[1].button(f'📂 {t("open_customer")}', key="fin_open", use_container_width=True):
+    if oc[1].button(f':material/folder_open: {t("open_customer")}', key="fin_open", use_container_width=True):
         _customer_dialog(user, next(c for c in finished if c["customer_id"] == pick))
 
 
@@ -103,12 +103,12 @@ def _customer_cards(user, customers):
         for c, col in zip(customers[i:i + per_row], cols):
             with col, st.container(border=True):
                 st.markdown(f'**{c["full_name"]}**')
-                st.caption(f'📞 {c["phone"] or "—"}')
-                st.caption(f'🚗 {c["rental_count"]} · '
+                st.caption(f':material/call: {c["phone"] or "—"}')
+                st.caption(f':material/directions_car: {c["rental_count"]} · '
                            f'{t("col_last_rental")}: {(c["last_rental"] or "—")[:10]}')
                 st.caption(f'{t("col_registered_by")}: '
                            f'{_who(c.get("last_by_name"), c.get("last_by_role"))}')
-                if st.button(f'📂 {t("card_open")}', key=f'open_{c["customer_id"]}',
+                if st.button(f':material/folder_open: {t("card_open")}', key=f'open_{c["customer_id"]}',
                              use_container_width=True):
                     _customer_dialog(user, c)
 
@@ -134,11 +134,11 @@ def _customer_dialog(user, cust):
     cid = cust["customer_id"]
 
     def body():
-        st.caption(f'📞 {cust["phone"] or "—"} · 🆔 {cust["id_passport"] or "—"}')
+        st.caption(f':material/call: {cust["phone"] or "—"} · :material/badge: {cust["id_passport"] or "—"}')
 
         # edit customer details (Employee and above)
         if can(user, "create_reservation"):
-            with st.expander(f'✏️ {t("edit_customer")}'):
+            with st.expander(f':material/edit: {t("edit_customer")}'):
                 with st.form(f"editcust_{cid}"):
                     e1, e2 = st.columns(2)
                     cn = e1.text_input(t("client_name"), value=cust["full_name"])
@@ -151,7 +151,7 @@ def _customer_dialog(user, cust):
                             update_customer(cid, cn, cp, ci)
                             audit_service.record(user, "edit_customer", "customer",
                                                  cid, cn.strip())
-                            st.toast(t("customer_saved"), icon="✅")
+                            st.toast(t("customer_saved"), icon=":material/check_circle:")
                             st.rerun()
 
         st.markdown(f'#### {t("customer_history")}')
@@ -165,13 +165,13 @@ def _customer_dialog(user, cust):
         if can(user, "manage_users"):
             _reassign(user, cust, history)
 
-    st.dialog(f'👤 {cust["full_name"]}', width="large")(body)()
+    st.dialog(f':material/person: {cust["full_name"]}', width="large")(body)()
 
 
 def _invoice_dialog(deal_id, lang):
     def body():
         render_invoice(deal_id, key_prefix=f"custinv_{deal_id}", lang=lang)
-    st.dialog(f'🧾 {t("print_invoice")}', width="large")(body)()
+    st.dialog(f':material/receipt_long: {t("print_invoice")}', width="large")(body)()
 
 
 # ─────────────────────────── rental-history table ──────────────────────────
@@ -204,7 +204,7 @@ def _history_table(user, history):
 # ─────────────────────────── reassign registered-by ────────────────────────
 def _reassign(user, cust, history):
     cid = cust["customer_id"]
-    with st.expander(f'🔁 {t("reassign_registered_by")}'):
+    with st.expander(f':material/swap_horiz: {t("reassign_registered_by")}'):
         # The rental is identified by the Customer Full Name (+ car/period to
         # disambiguate when a customer has several rentals) instead of the raw
         # contract/deal id.
@@ -224,5 +224,5 @@ def _reassign(user, cust, history):
                            rb_user["full_name"] or rb_user["username"], rb_user["role"])
             audit_service.record(user, "reassign_registered_by", "rental",
                                  rb["deal_id"], rb_user["username"])
-            st.toast(t("registered_by_updated"), icon="✅")
+            st.toast(t("registered_by_updated"), icon=":material/check_circle:")
             st.rerun()

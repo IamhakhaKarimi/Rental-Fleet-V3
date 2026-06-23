@@ -31,7 +31,7 @@ _FONT_CANDIDATES = [
     ("/Library/Fonts/Arial.ttf", "/Library/Fonts/Arial Bold.ttf"),
 ]
 
-_ACCENT = (11, 122, 85)    # brand emerald (#0B7A55) — matches ui/theme.py
+_ACCENT = (26, 28, 30)     # ink (#1A1C1E) — monochrome brand, matches ui/theme.py
 _TEXT = (33, 28, 23)       # warm ink #211C17
 _MUTED = (115, 107, 96)    # warm taupe #736B60
 _LIGHT = (242, 239, 233)   # warm surface #F2EFE9

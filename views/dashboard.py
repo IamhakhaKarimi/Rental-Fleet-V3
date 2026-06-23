@@ -14,10 +14,10 @@ import html as _html
 
 
 def _available_cards(fleet: list[dict], user):
-    """Grid of available vehicles, each a card with a photo (or 🚘 placeholder)
+    """Grid of available vehicles, each a card with a photo (or :material/directions_car: placeholder)
     and a Rent button that opens the registration popup."""
     avail = [v for v in fleet if v["status"] == "Available"]
-    st.subheader(f"🚗 {t('available_now')} ({len(avail)})")
+    st.subheader(f":material/directions_car: {t('available_now')} ({len(avail)})")
     if not avail:
         st.info(t("no_available_now"))
         return
@@ -29,9 +29,9 @@ def _available_cards(fleet: list[dict], user):
             with c, st.container(border=True):
                 render_vehicle_thumb(v["vehicle_id"], height=140)
                 st.markdown(f'**{v["make_model"]}**' + (f' · {v["year"]}' if v.get("year") else ''))
-                st.caption(f'🚗 {v["vehicle_id"]} · {v["license_plate"] or "—"}')
+                st.caption(f':material/directions_car: {v["vehicle_id"]} · {v["license_plate"] or "—"}')
                 st.caption(f'**{format_eur(v["base_daily_rate"])}** / {t("per_day")}')
-                if may_rent and st.button(f'➕ {t("rent_card_btn")}', key=f'rentcard_{v["vehicle_id"]}',
+                if may_rent and st.button(f':material/add: {t("rent_card_btn")}', key=f'rentcard_{v["vehicle_id"]}',
                                           type="primary", use_container_width=True):
                     open_rental_dialog(user, "dash", v)
 
@@ -50,7 +50,7 @@ def _visitor_home(user, fleet):
         unsafe_allow_html=True,
     )
     avail = [v for v in fleet if v["status"] == "Available"]
-    st.subheader(f'🚗 {t("available_now")} ({len(avail)})')
+    st.subheader(f':material/directions_car: {t("available_now")} ({len(avail)})')
     if not avail:
         st.info(t("no_available_now"))
         return
@@ -61,14 +61,14 @@ def _visitor_home(user, fleet):
             with c, st.container(border=True):
                 render_vehicle_thumb(v["vehicle_id"], height=150)
                 st.markdown(f'**{v["make_model"]}**' + (f' · {v["year"]}' if v.get("year") else ''))
-                st.caption(f'🔖 {v["license_plate"] or "—"} · 📏 {v.get("mileage", 0):,} km')
+                st.caption(f':material/pin: {v["license_plate"] or "—"} · :material/speed: {v.get("mileage", 0):,} km')
                 st.markdown(
                     '<span style="font-family:var(--font-display);font-weight:700;'
                     f'font-size:1.15rem;color:var(--accent)">{format_eur(v["base_daily_rate"])}</span>'
                     f'<span style="color:var(--muted)"> /{t("per_day")}</span>',
                     unsafe_allow_html=True)
     st.divider()
-    st.info(f'📞 {t("contact_to_book")}')
+    st.info(f':material/call: {t("contact_to_book")}')
 
 
 def render_dashboard(user):
@@ -80,7 +80,7 @@ def render_dashboard(user):
         _visitor_home(user, fleet)
         return
 
-    st.title(f"👤 {user['full_name']} — {t(ROLE_LABEL_KEY.get(user['role'],'role_visitor'))}")
+    st.title(f":material/person: {user['full_name']} — {t(ROLE_LABEL_KEY.get(user['role'],'role_visitor'))}")
     st.caption(t("dashboard_help"))
 
     active = rrepo.list_active_rentals_with_vehicle()
@@ -88,7 +88,7 @@ def render_dashboard(user):
     # (Overdue / due-soon reminders now live in the top-bar notification bell.)
 
     # ── timeline ───────────────────────────────────────────────────────────
-    st.subheader(f"📅 {t('timeline_title')}")
+    st.subheader(f":material/calendar_month: {t('timeline_title')}")
     if not active:
         st.info(t("timeline_empty"))
     render_timeline(fleet, active)
@@ -96,10 +96,10 @@ def render_dashboard(user):
     # ── KPIs ───────────────────────────────────────────────────────────────
     counts = vrepo.fleet_counts()
     c1, c2, c3, c4 = st.columns(4)
-    with c1: kpi_tile("kpi_total",     counts["total"], icon="🚗")
-    with c2: kpi_tile("kpi_available", counts["available"], accent=True, icon="✅")
-    with c3: kpi_tile("kpi_rented",    counts["rented"], icon="🔑")
-    with c4: kpi_tile("kpi_garage",    counts["garage"], icon="🔧")
+    with c1: kpi_tile("kpi_total",     counts["total"], icon="directions_car")
+    with c2: kpi_tile("kpi_available", counts["available"], accent=True, icon="check_circle")
+    with c3: kpi_tile("kpi_rented",    counts["rented"], icon="vpn_key")
+    with c4: kpi_tile("kpi_garage",    counts["garage"], icon="build")
 
     st.divider()
 
@@ -114,7 +114,7 @@ def render_dashboard(user):
     st.divider()
 
     # ── searchable fleet table ─────────────────────────────────────────────
-    st.subheader(f"🚗 {t('fleet_title')}")
+    st.subheader(f":material/directions_car: {t('fleet_title')}")
     q = st.text_input(t("search"), key="dash_search", placeholder=t("search"))
     rows = [{
         t("col_id"):     v["vehicle_id"],

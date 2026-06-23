@@ -3,9 +3,12 @@ Visual theme for the whole app.
 
 Typeface system — ONE minimalistic sans-serif for the whole app (loaded from Google
 Fonts, free, with full Turkish/Albanian glyph coverage):
-  - Inter -> everything: brand wordmark, page titles, KPI numbers, labels, tables,
-    controls. Both --font-display and --font-body resolve to Inter; the two CSS
-    variables are kept only so size/weight intent stays legible at call sites.
+  - Plus Jakarta Sans -> everything: brand wordmark, page titles, KPI numbers,
+    labels, tables, controls. It's a clean geometric-humanist sans chosen to
+    imitate Google Sans / the Gemini UI face (Google Sans itself isn't on Google
+    Fonts), in keeping with the minimalist, monochrome navigation. Both
+    --font-display and --font-body resolve to it; the two CSS variables are kept
+    only so size/weight intent stays legible at call sites.
 
 inject_theme() is called once in app.py and:
   - imports the fonts
@@ -15,30 +18,31 @@ inject_theme() is called once in app.py and:
 
 import streamlit as st
 
-# Colour tokens — single accent (blue), neutral greys, status colours only as accents.
-# ── Brand palette: "Onyx" — a premium dark-sidebar identity for a high-end car
-# rental. A clean near-white content canvas + neutral near-black ink keep the work
-# area calm and legible; a deep emerald accent carries CTAs, links and the active
-# nav state. The navigation sidebar itself is near-black (styled in _POLISH_CSS).
-# Status hues stay semantic and distinct from the emerald accent.
+# Colour tokens — fully MONOCHROME (black / white / grey). There is NO brand colour:
+# the whole app now wears the minimalist sidebar palette — a clean near-white canvas,
+# near-black ink, neutral greys, hairline borders. The "accent" is ink (CTAs, links,
+# focus, active states), and the former status hues are greyscale: each status still
+# reads via its TEXT label (+ dot), so meaning is preserved without colour.
 TOKENS = {
     "bg": "#FAFAF9",        # clean near-white content canvas
     "surface": "#F4F3F1",   # subtle surface for tiles / cards
     "text": "#1A1C1E",      # neutral near-black ink
     "muted": "#6B7280",     # cool grey
     "border": "#EAE8E3",    # hairline
-    "accent": "#0B7A55",    # deep emerald — CTAs, links, focus (AA on light)
-    "accent_hover": "#095E42",
-    "ok": "#15803D",        # status: Available
-    "info": "#2563EB",      # status: Rented
-    "warn": "#D97706",      # status: Maintenance / due-soon
-    "danger": "#DC2626",    # status: overdue / delete
+    "accent": "#1A1C1E",    # ink — CTAs, links, focus (was emerald; now monochrome)
+    "accent_hover": "#3F3F46",  # lifted grey on hover/press
+    "ok": "#1A1C1E",        # status colours are greyscale now (text label carries meaning)
+    "info": "#52525B",      # status: Rented (grey)
+    "warn": "#71717A",      # status: Maintenance / due-soon (grey)
+    "danger": "#DC2626",    # ALERT RED — the ONE accent kept, only for genuinely
+                            # destructive (delete) + overdue cues; everything else monochrome
+
     "archived": "#9CA3AF",  # neutral grey
 }
 
 FONT_IMPORT = (
     "@import url('https://fonts.googleapis.com/css2?"
-    "family=Inter:wght@400;500;600;700;800&display=swap');"
+    "family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');"
 )
 
 
@@ -73,15 +77,23 @@ _POLISH_CSS = """
 .stButton > button { box-shadow: 0 1px 2px rgba(15,23,42,.06); }
 .stButton > button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px -8px rgba(15,23,42,.30); }
 .stButton > button:active { transform: translateY(0); box-shadow: 0 1px 2px rgba(15,23,42,.12); }
-.stButton > button[kind="primary"] { box-shadow: 0 2px 10px -3px rgba(11,122,85,.40); }
+.stButton > button[kind="primary"] { box-shadow: 0 2px 10px -3px rgba(15,23,42,.28); }
 [class*="st-key-fldel_"] button,
-[class*="st-key-dzreset_"] button { box-shadow: 0 2px 10px -3px rgba(220,38,38,.45) !important; }
+[class*="st-key-dzreset_"] button { box-shadow: 0 2px 10px -3px rgba(220,38,38,.40) !important; }
 
-/* Bordered containers read as real cards */
-div[data-testid="stVerticalBlockBorderWrapper"] {
-  border-radius: 14px !important; box-shadow: 0 1px 2px rgba(15,23,42,.04);
+/* Bordered containers read as real cards (vehicle info cards, etc.). Streamlit 1.58
+   renders st.container(border=True) as a bordered stVerticalBlock wrapped in a
+   stLayoutWrapper — the old stVerticalBlockBorderWrapper testid is gone, which left
+   the previous rule dead. Target the 1.58 structure and give each card a MINIMAL
+   vertical margin so adjacent card rows never visually collide/overlap. */
+[data-testid="stMain"] [data-testid="stLayoutWrapper"] > [data-testid="stVerticalBlock"] {
+  margin-top: 6px !important; margin-bottom: 6px !important;
+  border-radius: 12px !important; box-shadow: 0 1px 2px rgba(15,23,42,.04);
 }
-div[data-testid="stVerticalBlockBorderWrapper"]:hover { box-shadow: 0 10px 28px -16px rgba(15,23,42,.22); }
+/* Legacy fallback for older Streamlit (pre-1.58) that still emits the wrapper. */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+  border-radius: 12px !important; box-shadow: 0 1px 2px rgba(15,23,42,.04); margin: 6px 0 !important;
+}
 
 /* KPI tiles lift slightly on hover */
 .kpi:hover { transform: translateY(-2px); box-shadow: 0 12px 26px -14px rgba(15,23,42,.24); }
@@ -89,7 +101,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:hover { box-shadow: 0 10px 28px 
 /* Inputs: rounder with an accent focus glow */
 [data-baseweb="input"], [data-baseweb="select"] > div, [data-baseweb="textarea"] { border-radius: 10px !important; }
 [data-baseweb="input"]:focus-within, [data-baseweb="select"] > div:focus-within {
-  border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(11,122,85,.16) !important;
+  border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(17,24,39,.14) !important;
 }
 
 /* Dataframes: contained and rounded */
@@ -109,11 +121,46 @@ hr { opacity: .7; }
 [data-testid="stCaptionContainer"] { line-height: 1.5; }
 a { color: var(--accent); }
 
+/* ===== Calendar (st.date_input popover): HOLLOW highlighted dates =====
+   Streamlit's BaseWeb datepicker draws the selected day as a solid accent DISC via
+   the gridcell's ::after pseudo-element (and white text). For a minimalist,
+   monochrome look we make that highlight HOLLOW: keep the disc geometry but null its
+   fill and give it a crisp ink ring, with the day number switched back to ink. The
+   popover renders in the main DOM, so this lives in the global layer; the
+   "Selected"/"Chosen" aria-label prefix (the picker uses an English a11y locale) is
+   the stable hook. The hovered day gets a lighter grey ring the same way. */
+[data-baseweb="calendar"] [role="gridcell"][aria-label^="Selected"]::after,
+[data-baseweb="calendar"] [role="gridcell"][aria-label^="Chosen"]::after {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 2px solid var(--text) !important;
+  border-radius: 50% !important;
+  box-sizing: border-box !important;
+}
+[data-baseweb="calendar"] [role="gridcell"][aria-label^="Selected"],
+[data-baseweb="calendar"] [role="gridcell"][aria-label^="Selected"] > div,
+[data-baseweb="calendar"] [role="gridcell"][aria-label^="Chosen"],
+[data-baseweb="calendar"] [role="gridcell"][aria-label^="Chosen"] > div {
+  color: var(--text) !important;
+}
+/* Hover/focus: a lighter hollow grey ring so the fill never goes solid */
+[data-baseweb="calendar"] [role="gridcell"]:hover::after {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 1.5px solid var(--muted) !important;
+  border-radius: 50% !important;
+  box-sizing: border-box !important;
+}
+[data-baseweb="calendar"] [role="gridcell"]:hover,
+[data-baseweb="calendar"] [role="gridcell"]:hover > div {
+  color: var(--text) !important;
+}
+
 /* Visitor home hero (customer-facing browse banner) */
 .visitor-hero {
-  background: linear-gradient(135deg, #101826 0%, #0B7A55 100%);
+  background: linear-gradient(135deg, #1A1C1E 0%, #3F3F46 100%);
   color: #fff; border-radius: 18px; padding: 30px 28px; margin-bottom: 18px;
-  box-shadow: 0 16px 40px -20px rgba(11,122,85,.45);
+  box-shadow: 0 16px 40px -20px rgba(15,23,42,.45);
 }
 .visitor-hero .vh-brand { font-family: var(--font-display); font-weight: 700;
   font-size: 1.05rem; opacity: .9; letter-spacing: .02em; }
@@ -144,8 +191,15 @@ section[data-testid="stSidebar"] {
 /* Hide Streamlit's native collapse/expand/resize controls — our toggle replaces them. */
 [data-testid="stSidebarCollapseButton"], [data-testid="stExpandSidebarButton"],
 section[data-testid="stSidebar"] [data-testid="stSidebarResizeHandle"] { display: none !important; }
-/* Small inset so the rounded row highlight keeps a margin from the edges. */
-section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] { padding: 10px 8px 16px !important; }
+/* The native sidebar HEADER only held that (now-hidden) collapse button, leaving a
+   ~60px empty band at the top that pushed content down and forced a scrollbar.
+   Collapse it to nothing so the rail starts flush at the top. */
+section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] {
+  height: 0 !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important;
+}
+/* Small inset so the rounded row highlight keeps a margin from the edges. Tight top
+   padding so there's no wasted space above the toggle. */
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] { padding: 6px 8px 14px !important; }
 
 /* Keep page content clear of the sidebar. A sidebar at its natural width
    (~200px+) lets Streamlit's flex layout offset the main column correctly; the
@@ -161,92 +215,156 @@ section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] { padding:
 /* Full-height flex column so the footer pins to the bottom (with a fallback gap).
    align-items:stretch lets rows fill the sidebar width. */
 section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"]:first-of-type {
-  min-height: calc(100vh - 46px); display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+  /* Fill the viewport minus the user-content paddings (6 top + 14 bottom) so the
+     footer pins to the bottom; the small extra keeps content within the viewport so
+     it never spills over into a scrollbar. */
+  min-height: calc(100vh - 28px); display: flex; flex-direction: column; align-items: stretch; gap: 4px;
 }
 section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"]:first-of-type > div:has(.rail-spacer) {
   flex: 1 1 auto;
 }
-.rail-spacer { min-height: 8vh; }
+.rail-spacer { min-height: 12px; }
 
 /* Brand header: gradient mark + name + tagline, with a hairline divider below */
 .rail-brand-row {
   display: flex; align-items: center; gap: 11px; width: 100%;
-  padding: 2px 10px 12px; margin-bottom: 4px; border-bottom: 1px solid var(--border);
+  padding: 2px 8px 4px;
+  /* Minimal vertical breathing room so the logo doesn't touch the toggle above or
+     the first nav row below (which it slightly overlapped). */
+  margin: 6px 0 12px;   /* no border — clean, like the reference */
 }
+/* Monochrome mark — a near-black rounded square with the business initial in
+   white. No brand colour / gradient, in keeping with the black-and-white rail. */
 .rail-brand-mark {
-  width: 38px; height: 38px; border-radius: 11px; flex: 0 0 auto;
+  width: 30px; height: 30px; border-radius: 9px; flex: 0 0 auto;
   display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #0B7A55, #34D399); color: #fff;
-  font-family: var(--font-display); font-weight: 700; font-size: 1.05rem;
-  box-shadow: 0 6px 16px -7px rgba(11,122,85,.55);
+  background: var(--text); color: #fff;
+  font-family: var(--font-display); font-weight: 700; font-size: .85rem;
+  box-shadow: 0 1px 3px rgba(15,23,42,.18);
 }
 .rail-brand-text { min-width: 0; }
-.rbt-name { font-family: var(--font-display); font-weight: 700; font-size: .9rem; letter-spacing: -.01em;
+.rbt-name { font-family: var(--font-display); font-weight: 700; font-size: .8rem; letter-spacing: -.01em;
   color: var(--text); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rbt-tag { font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--muted); margin-top: 2px; }
+.rbt-tag { font-size: .55rem; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); margin-top: 1px; }
 
-/* Account row in the footer: avatar + name + role */
-.rail-user-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 10px 2px; }
-.rail-user-avatar {
-  width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--surface); border: 1px solid var(--border);
-  color: var(--text); font-weight: 600; font-size: .82rem;
-}
-.rail-user-text { min-width: 0; }
-.ru-name { font-weight: 600; font-size: .84rem; color: var(--text); line-height: 1.15;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ru-role { font-size: .7rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Profile dropdown (st.popover) header card: name + role, shown at the top of the
+   account menu above the Settings / Logout actions. (The old static .rail-user-row
+   avatar block is gone — the account row is now the popover trigger.) */
+.acct-card { padding: 0 2px 8px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+.acct-name { font-family: var(--font-display); font-weight: 700; font-size: .9rem; color: var(--text); line-height: 1.2; }
+.acct-role { font-size: .72rem; color: var(--muted); margin-top: 1px; }
 
 /* Nav / footer rows: left-aligned icon + label, rounded inset highlight.
    (Per-state alignment/width — and label-hiding in the collapsed rail — are set in
    the dynamic block at the end of inject_theme.) */
-section[data-testid="stSidebar"] button[data-testid^="stBaseButton"] {
+/* Nav / footer rows AND the profile-menu popover trigger share one row style.
+   (The popover trigger has data-testid="stPopover…"; we match both so the account
+   row lines up with the section rows.) Compact sizing per the brief. */
+section[data-testid="stSidebar"] button[data-testid^="stBaseButton"],
+section[data-testid="stSidebar"] [data-testid="stPopover"] button {
   width: 100% !important; min-width: 0 !important; height: auto !important;
-  padding: 10px 12px !important; margin: 1px 0 !important;
+  padding: 6px 10px !important; margin: 1px 0 !important;
   background: transparent !important; border: none !important; box-shadow: none !important;
-  color: #4B5563 !important; font-size: .92rem !important; font-weight: 500 !important; line-height: 1.3 !important;
-  border-radius: 10px !important; white-space: nowrap !important; text-align: left !important;
+  color: #3F3F46 !important; font-size: .78rem !important; font-weight: 500 !important; line-height: 1.25 !important;
+  letter-spacing: 0 !important;
+  border-radius: 999px !important; white-space: nowrap !important; text-align: left !important;
   display: flex !important; align-items: center !important; justify-content: flex-start !important;
   transition: background .14s ease, color .14s ease !important;
 }
-section[data-testid="stSidebar"] button[data-testid^="stBaseButton"]:hover {
+section[data-testid="stSidebar"] button[data-testid^="stBaseButton"]:hover,
+section[data-testid="stSidebar"] [data-testid="stPopover"] button:hover {
   background: rgba(17,24,39,.05) !important; color: var(--text) !important;
   transform: none !important; box-shadow: none !important;
 }
 /* Streamlit centers a button's label via two nested flex wrappers (jc:center);
    pin them left so every row's icon lines up in one column. */
 section[data-testid="stSidebar"] button[data-testid^="stBaseButton"] > div,
-section[data-testid="stSidebar"] button[data-testid^="stBaseButton"] > div > span {
+section[data-testid="stSidebar"] button[data-testid^="stBaseButton"] > div > span,
+section[data-testid="stSidebar"] [data-testid="stPopover"] button > div,
+section[data-testid="stSidebar"] [data-testid="stPopover"] button > div > span {
   justify-content: flex-start !important; width: 100% !important;
 }
-/* Material icon inside a row: a touch larger than the label, with breathing room */
-section[data-testid="stSidebar"] button[data-testid^="stBaseButton"] span[role="img"] {
-  font-size: 1.3rem !important; margin-right: 11px !important; flex: 0 0 auto !important;
+/* ALIGNMENT FIX: Streamlit renders the label as `<p>` (display:block) holding an
+   inline-block Material icon (vertical-align:bottom) next to a bare text node, so
+   the taller icon rode high above the text. Make the label container a flex row
+   with centred items and pin the icon's vertical-align to middle so icon + page
+   title sit on one line. */
+section[data-testid="stSidebar"] button [data-testid="stMarkdownContainer"],
+section[data-testid="stSidebar"] button [data-testid="stMarkdownContainer"] p {
+  display: flex !important; align-items: center !important; line-height: 1 !important; margin: 0 !important;
+  /* The label text lives in this <p>, which carries Streamlit's default 14px — a
+     button-level font-size won't reach it, so set the compact size HERE (covers
+     section rows AND the profile trigger). */
+  font-size: .78rem !important;
 }
-/* Active section: soft-emerald rounded highlight, emerald icon + label */
+/* Material icon inside a row: a touch larger than the label, with breathing room.
+   Smaller than before per the brief; vertical-align:middle keeps it centred. */
+section[data-testid="stSidebar"] button span[role="img"] {
+  font-size: 1.05rem !important; margin-right: 9px !important; flex: 0 0 auto !important;
+  vertical-align: middle !important; line-height: 1 !important;
+}
+/* Active section: a soft neutral-grey rounded pill (Gemini-style), dark icon +
+   label — no brand colour, matching the reference screenshot's "Images" item. */
 section[data-testid="stSidebar"] [class*="st-key-nav_"] button[kind="primary"] {
-  background: rgba(11,122,85,.10) !important; color: var(--accent) !important; font-weight: 600 !important;
+  background: rgba(17,24,39,.07) !important; color: var(--text) !important; font-weight: 600 !important;
 }
 section[data-testid="stSidebar"] [class*="st-key-nav_"] button[kind="primary"]:hover {
-  background: rgba(11,122,85,.16) !important; color: var(--accent) !important;
+  background: rgba(17,24,39,.10) !important; color: var(--text) !important;
 }
-/* An overdue reminders bell stays a real alarm (filled red row) */
-section[data-testid="stSidebar"] [class*="st-key-notif_bell"] button[kind="primary"],
+/* Notification bell: fully monochrome to match the black-and-white rail — no red
+   alarm tint. When there are reminders it renders type="primary", so it gets the
+   same soft-grey active pill as a selected section (the count in its label is the
+   signal). The bell + logout share the same neutral hover as every other row. */
+section[data-testid="stSidebar"] [class*="st-key-notif_bell"] button[kind="primary"] {
+  background: rgba(220,38,38,.12) !important; color: var(--danger) !important; font-weight: 600 !important;
+}
 section[data-testid="stSidebar"] [class*="st-key-notif_bell"] button[kind="primary"]:hover {
-  background: var(--danger) !important; color: #fff !important;
+  background: rgba(220,38,38,.18) !important; color: var(--danger) !important;
 }
 section[data-testid="stSidebar"] [class*="st-key-notif_bell"] button[kind="primary"] span[role="img"] {
-  color: #fff !important;
+  color: var(--danger) !important;
 }
-/* Logout row: a quiet danger tint on hover */
-section[data-testid="stSidebar"] [class*="st-key-logout_btn"] button:hover {
-  background: rgba(220,38,38,.08) !important; color: var(--danger) !important;
+/* Keyboard focus ring (WCAG 2.4.7) — ink, not a brand colour, to stay monochrome */
+section[data-testid="stSidebar"] button[data-testid^="stBaseButton"]:focus-visible,
+section[data-testid="stSidebar"] [data-testid="stPopover"] button:focus-visible {
+  outline: 2px solid var(--text) !important; outline-offset: 2px !important;
 }
-/* Keyboard focus ring (WCAG 2.4.7) */
-section[data-testid="stSidebar"] button[data-testid^="stBaseButton"]:focus-visible {
-  outline: 2px solid var(--accent) !important; outline-offset: 2px !important;
+
+/* ===== Profile dropdown (st.popover) =====
+   Trigger sits in the sidebar footer (account icon + name). Hide its dropdown caret
+   so the row matches the section rows. The PANEL renders in a body-level portal, so
+   its rules are global (not scoped under the sidebar): a tidy monochrome menu whose
+   Settings / Logout rows look like left-aligned icon+label menu items. */
+section[data-testid="stSidebar"] [data-testid="stPopover"] button svg { display: none !important; }
+/* Profile trigger label: match the compact nav-row label size (its <p> carries an
+   explicit font-size, so a button-level rule won't reach it). The collapsed rail
+   hides it via an equal-specificity rule injected later (see rail_css). */
+section[data-testid="stSidebar"] [data-testid="stPopoverButton"] [data-testid="stMarkdownContainer"] p {
+  font-size: .78rem !important; font-weight: 500 !important;
+}
+[data-testid="stPopoverBody"] { padding: 8px !important; min-width: 184px !important; }
+/* Menu label text: match the compact menu size and centre it with its icon (the
+   label lives in a <p> with its own font-size, so set it here — a button-level
+   font-size won't cascade into it). */
+[data-testid="stPopoverBody"] button [data-testid="stMarkdownContainer"],
+[data-testid="stPopoverBody"] button [data-testid="stMarkdownContainer"] p {
+  display: flex !important; align-items: center !important; line-height: 1 !important;
+  margin: 0 !important; font-size: .85rem !important;
+}
+[data-testid="stPopoverBody"] button[data-testid^="stBaseButton"] {
+  width: 100% !important; justify-content: flex-start !important; text-align: left !important;
+  background: transparent !important; border: none !important; box-shadow: none !important;
+  color: var(--text) !important; font-weight: 500 !important; font-size: .85rem !important;
+  padding: 8px 10px !important; border-radius: 8px !important;
+  display: flex !important; align-items: center !important;
+}
+[data-testid="stPopoverBody"] button[data-testid^="stBaseButton"]:hover {
+  background: rgba(17,24,39,.06) !important; color: var(--text) !important;
+  transform: none !important; box-shadow: none !important;
+}
+[data-testid="stPopoverBody"] button span[role="img"] {
+  font-size: 1.05rem !important; margin-right: 9px !important; vertical-align: middle !important;
 }
 </style>
 """
@@ -270,8 +388,8 @@ def inject_theme():
         --warn: {TOKENS['warn']};
         --danger: {TOKENS['danger']};
         --archived: {TOKENS['archived']};
-        --font-display: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-        --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
     }}
 
     /* Base font on the whole app */
@@ -279,7 +397,11 @@ def inject_theme():
     label, input, textarea, select, button, table {{
         font-family: var(--font-body);
     }}
-    h1, h2, h3, h4 {{ font-family: var(--font-display); letter-spacing: -0.01em; }}
+    /* Force the app font onto Streamlit's native headings (st.title/header/
+       subheader). Streamlit's theme applies its default "Source Sans" to h1–h6
+       with class-level specificity, so an !important here is needed to keep the
+       whole app on one Gemini-style face. */
+    h1, h2, h3, h4, h5, h6 {{ font-family: var(--font-display) !important; letter-spacing: -0.01em; }}
 
     /* Sidebar brand */
     .bcr-brand {{ font-family: var(--font-display); font-weight: 700;
@@ -309,14 +431,26 @@ def inject_theme():
     .badge {{ display:inline-flex; align-items:center; gap:6px; padding: 2px 10px;
         border-radius: 999px; font-size: 0.78rem; font-weight: 600; }}
     .badge::before {{ content:''; width:7px; height:7px; border-radius:50%; background: currentColor; }}
-    /* Badge text uses a darker shade of each status hue (not the token itself) so
-       the small pill text clears WCAG AA (4.5:1) on its light tint; the coloured
-       dot (::before, currentColor) stays clearly status-coded. */
-    .badge.ok {{ color:#166534; background: rgba(21,128,61,.12); }}
-    .badge.info {{ color:#1D4ED8; background: rgba(37,99,235,.12); }}
-    .badge.warn {{ color:#92400E; background: rgba(217,119,6,.16); }}
+    /* Monochrome badges: the same soft grey pill as the sidebar, in ink. The status
+       TEXT (e.g. "Available" / "Rented" / "Overdue") carries the meaning — no colour.
+       Overdue/danger gets a slightly stronger tint so it reads a touch heavier. */
+    .badge.ok {{ color:#1A1C1E; background: rgba(17,24,39,.07); }}
+    .badge.info {{ color:#3F3F46; background: rgba(17,24,39,.06); }}
+    .badge.warn {{ color:#52525B; background: rgba(17,24,39,.06); }}
     .badge.danger {{ color:#B91C1C; background: rgba(220,38,38,.12); }}
     .badge.archived {{ color:#57534E; background: rgba(168,162,158,.22); }}
+
+    /* Inline monochrome Material Symbols icon for use INSIDE custom HTML, where the
+       Streamlit `:material/x:` directive isn't processed (KPI chips, lock chip, the
+       photo placeholder). The font is already loaded app-wide by the sidebar icons;
+       the glyph inherits the surrounding text colour, so it stays black/white. */
+    .msym {{ font-family: 'Material Symbols Rounded'; font-weight: 400; font-style: normal;
+        line-height: 1; vertical-align: -.18em; letter-spacing: normal; text-transform: none;
+        white-space: nowrap; -webkit-font-smoothing: antialiased; -webkit-font-feature-settings: 'liga'; }}
+    /* Locked-status chip on a fleet card (icon only; full message shown on hover). */
+    .lock-chip {{ display: inline-flex; align-items: center; margin-left: 6px;
+        color: var(--muted); cursor: help; }}
+    .lock-chip .msym {{ font-size: 1.05rem; }}
 
     /* KPI tile — uppercase label + optional icon chip on top, a large
        tabular-figure value below (tnum/lnum so digits align like a fintech stat). */
@@ -328,12 +462,12 @@ def inject_theme():
         text-transform: uppercase; color: var(--muted); line-height: 1.3; }}
     .kpi .kpi-chip {{ width: 30px; height: 30px; border-radius: 9px; flex: 0 0 auto;
         display: flex; align-items: center; justify-content: center; font-size: .92rem;
-        line-height: 1; background: rgba(11,122,85,.10); }}
+        line-height: 1; background: rgba(17,24,39,.06); }}
     .kpi .kpi-value {{ font-family: var(--font-display); font-weight: 700; font-size: 2rem;
         color: var(--text); line-height: 1; letter-spacing: -.02em;
         font-variant-numeric: tabular-nums lining-nums; font-feature-settings: "tnum" 1, "lnum" 1; }}
     .kpi.accent .kpi-value {{ color: var(--accent); }}
-    .kpi.accent .kpi-chip {{ background: rgba(11,122,85,.16); }}
+    .kpi.accent .kpi-chip {{ background: rgba(17,24,39,.10); }}
 
     /* Vehicle photo placeholder (🚘 avatar when no photo is uploaded) */
     .car-ph {{ display:flex; align-items:center; justify-content:center;
@@ -341,8 +475,8 @@ def inject_theme():
         border-radius: 12px; font-size: 3.2rem; color: var(--muted); width:100%; }}
 
     /* Calculated return highlight */
-    .return-box {{ background: linear-gradient(180deg, rgba(11,122,85,.08), rgba(11,122,85,.02));
-        border:1px solid rgba(11,122,85,.25); border-radius: 14px; padding: 16px; }}
+    .return-box {{ background: linear-gradient(180deg, rgba(17,24,39,.06), rgba(17,24,39,.02));
+        border:1px solid rgba(17,24,39,.18); border-radius: 14px; padding: 16px; }}
     .return-box .lbl {{ font-size:.74rem; font-weight:500; letter-spacing:.08em;
         text-transform:uppercase; color: var(--muted); }}
     .return-box .val {{ font-family: var(--font-display); font-weight:700;
@@ -396,6 +530,12 @@ def inject_theme():
         h1 {{ font-size: 1.5rem !important; }}
         .page-title {{ font-size: 1.25rem; }}
         .kpi .kpi-value {{ font-size: 1.6rem; }}
+        /* KPI stat tiles (Total/Available/Rented/Garage vehicle counts): when the
+           4-up row stacks on mobile, each tile (min-height 94px) is taller than its
+           stacked column, so tiles overflowed and OVERLAPPED. Add bottom spacing to
+           the tile's own column so consecutive tiles clear each other. */
+        [data-testid="stMain"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:has(.kpi) {{
+            margin-bottom: 18px !important; }}
         .inv-title h1, .brand {{ font-size: 1.3rem !important; }}
     }}
     </style>
@@ -413,23 +553,46 @@ def inject_theme():
     expanded = st.session_state.get("nav_expanded", True)
     rail_css = """
       section[data-testid="stSidebar"],
-      section[data-testid="stSidebar"] > div:first-child { width: 68px !important; min-width: 68px !important; }
-      section[data-testid="stSidebar"] button[data-testid^="stBaseButton"] {
+      section[data-testid="stSidebar"] > div:first-child { width: 62px !important; min-width: 62px !important; }
+      /* COLLAPSED = a bare icon rail: no panel background, no border, no shadow —
+         just monochrome icons floating on the page (per the brief). */
+      section[data-testid="stSidebar"] {
+        background: transparent !important; border-right: none !important; box-shadow: none !important; }
+      /* Centre every icon-only control (section rows + the profile popover trigger). */
+      section[data-testid="stSidebar"] button[data-testid^="stBaseButton"],
+      section[data-testid="stSidebar"] [data-testid="stPopover"] button {
         justify-content: center !important; padding-left: 0 !important; padding-right: 0 !important; }
       section[data-testid="stSidebar"] button[data-testid^="stBaseButton"] > div,
-      section[data-testid="stSidebar"] button[data-testid^="stBaseButton"] > div > span { justify-content: center !important; }
-      section[data-testid="stSidebar"] button[data-testid^="stBaseButton"] p { font-size: 0 !important; }
-      section[data-testid="stSidebar"] button[data-testid^="stBaseButton"] span[role="img"] {
-        font-size: 1.3rem !important; margin-right: 0 !important; }
-      section[data-testid="stSidebar"] .rail-brand-text,
-      section[data-testid="stSidebar"] .rail-user-text { display: none !important; }
-      section[data-testid="stSidebar"] .rail-brand-row,
-      section[data-testid="stSidebar"] .rail-user-row {
-        justify-content: center !important; padding-left: 0 !important; padding-right: 0 !important; }
+      section[data-testid="stSidebar"] button[data-testid^="stBaseButton"] > div > span,
+      section[data-testid="stSidebar"] [data-testid="stPopover"] button > div,
+      section[data-testid="stSidebar"] [data-testid="stPopover"] button > div > span,
+      section[data-testid="stSidebar"] button [data-testid="stMarkdownContainer"] { justify-content: center !important; }
+      /* Hide the text label (icon stays) for both kinds of button. The profile
+         trigger's label needs its own equal-specificity rule to beat the expanded
+         .78rem set in _POLISH_CSS (this one is injected later, so it wins here). */
+      section[data-testid="stSidebar"] button [data-testid="stMarkdownContainer"] p { font-size: 0 !important; }
+      section[data-testid="stSidebar"] [data-testid="stPopoverButton"] [data-testid="stMarkdownContainer"] p { font-size: 0 !important; }
+      section[data-testid="stSidebar"] button span[role="img"] {
+        font-size: 1.15rem !important; margin-right: 0 !important; }
+      /* The popover trigger's dropdown caret is noise in the icon rail — hide it. */
+      section[data-testid="stSidebar"] [data-testid="stPopover"] button svg { display: none !important; }
+      /* No background fills in the collapsed rail — not on hover, not on the active
+         section, not on the bell, not on the profile trigger. The active/hover icon
+         is signalled by ink colour (from the static rules), never by a coloured pill. */
+      section[data-testid="stSidebar"] button[data-testid^="stBaseButton"]:hover,
+      section[data-testid="stSidebar"] [data-testid="stPopover"] button:hover,
+      section[data-testid="stSidebar"] [class*="st-key-nav_"] button[kind="primary"],
+      section[data-testid="stSidebar"] [class*="st-key-nav_"] button[kind="primary"]:hover,
+      section[data-testid="stSidebar"] [class*="st-key-notif_bell"] button[kind="primary"],
+      section[data-testid="stSidebar"] [class*="st-key-notif_bell"] button[kind="primary"]:hover {
+        background: transparent !important; }
+      /* Collapsed rail shows no brand mark (matches the reference) — just the
+         toggle, the section icons, the bell, and the account (profile) icon. */
+      section[data-testid="stSidebar"] .rail-brand-row { display: none !important; }
     """
     expanded_css = """
       section[data-testid="stSidebar"],
-      section[data-testid="stSidebar"] > div:first-child { width: 248px !important; min-width: 248px !important; }
+      section[data-testid="stSidebar"] > div:first-child { width: 236px !important; min-width: 236px !important; }
     """
     state_css = expanded_css if expanded else rail_css
     st.markdown(

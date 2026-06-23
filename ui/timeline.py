@@ -56,18 +56,19 @@ def render_timeline(vehicles: list[dict], rentals: list[dict]):
       <script src="https://unpkg.com/vis-timeline@7.7.3/standalone/umd/vis-timeline-graph2d.min.js"></script>
       <link href="https://unpkg.com/vis-timeline@7.7.3/styles/vis-timeline-graph2d.min.css" rel="stylesheet"/>
       <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-        body {{ margin:0; font-family:'Inter',system-ui,sans-serif; background:transparent; }}
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
+        body {{ margin:0; font-family:'Plus Jakarta Sans',system-ui,sans-serif; background:transparent; }}
         #tlwrap {{ position:relative; }}
         #tl {{ border:1px solid #EAE8E3; border-radius:14px; padding:6px; background:#fff; }}
-        .vis-timeline {{ border:none; font-family:'Inter',system-ui,sans-serif; }}
+        .vis-timeline {{ border:none; font-family:'Plus Jakarta Sans',system-ui,sans-serif; }}
         .vis-labelset .vis-label {{ color:#1A1C1E; font-weight:500; font-size:12.5px; }}
         .vis-time-axis .vis-text {{ color:#6B7280; font-size:11px; }}
         .vis-item {{ border:none; border-radius:7px; color:#fff; font-size:11.5px; font-weight:600; padding:1px 6px; }}
-        .vis-item.rented {{ background:#2563EB; }}
-        .vis-item.duesoon {{ background:#D97706; color:#1A1C1E; }}   /* due within 24h (alert) — dark text for AA contrast on amber */
-        .vis-item.overdue {{ background:#DC2626; }}   /* past deadline (alarm) */
-        .vis-tooltip {{ font-family:'Inter',system-ui,sans-serif !important; font-size:12px !important;
+        /* Monochrome urgency ramp — darker = more urgent (state also in the tooltip). */
+        .vis-item.rented {{ background:#6B7280; }}    /* active rental — mid grey */
+        .vis-item.duesoon {{ background:#3F3F46; }}   /* due within 24h — dark grey */
+        .vis-item.overdue {{ background:#DC2626; }}   /* past deadline — ALERT RED */
+        .vis-tooltip {{ font-family:'Plus Jakarta Sans',system-ui,sans-serif !important; font-size:12px !important;
             background:#1A1C1E !important; color:#F8FAFC !important; border:none !important;
             border-radius:8px !important; padding:9px 12px !important; line-height:1.5 !important;
             box-shadow:0 10px 25px -5px rgba(0,0,0,.35) !important; }}
@@ -83,7 +84,7 @@ def render_timeline(vehicles: list[dict], rentals: list[dict]):
         .zoom-controls button {{ width:34px; height:34px; border:1px solid #EAE8E3; background:#fff;
             border-radius:8px; font-size:20px; font-weight:700; color:#1A1C1E; cursor:pointer;
             box-shadow:0 2px 6px rgba(0,0,0,.10); line-height:1; }}
-        .zoom-controls button:hover {{ background:#F2EFE9; border-color:#0B7A55; color:#0B7A55; }}
+        .zoom-controls button:hover {{ background:#F2EFE9; border-color:#1A1C1E; color:#1A1C1E; }}
       </style>
     </head><body>
       <div id="tlwrap">

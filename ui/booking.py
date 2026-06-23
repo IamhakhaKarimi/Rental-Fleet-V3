@@ -50,7 +50,7 @@ def _rental_form_body(user, key_prefix: str):
     def_start, def_days = st.session_state.get(f"{key_prefix}_dlg_def") or (None, None)
 
     st.markdown(
-        f'🚗 **{veh["vehicle_id"]} · {veh["make_model"]}** · '
+        f':material/directions_car: **{veh["vehicle_id"]} · {veh["make_model"]}** · '
         f'{veh.get("license_plate") or "—"} · {format_eur(veh["base_daily_rate"])}/{t("per_day")}'
     )
 
@@ -167,7 +167,7 @@ def render_booking_panel(user, key_prefix: str = "bk"):
             st.info(t("no_create_perm"))
             return
 
-        if st.button(f'➕ {t("open_rental_btn")}', type="primary",
+        if st.button(f':material/add: {t("open_rental_btn")}', type="primary",
                      use_container_width=True, key=f"{key_prefix}_open"):
             open_rental_dialog(user, key_prefix, picked,
                                default_start=start_date, default_days=num_days)

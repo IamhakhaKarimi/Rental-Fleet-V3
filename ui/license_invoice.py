@@ -45,14 +45,14 @@ def build_license_invoice_html(d: dict) -> str:
     return f"""<!DOCTYPE html><html><head><meta charset="utf-8"/>
 <title>{_esc(t('license_invoice_title'))} {_esc(d.get('invoice_no',''))}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
   *{{box-sizing:border-box}}
-  body{{font-family:'Inter',system-ui,sans-serif;color:#211C17;margin:0;background:#F2EFE9;padding:16px}}
+  body{{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#211C17;margin:0;background:#F2EFE9;padding:16px}}
   .sheet{{max-width:600px;margin:0 auto;background:#fff;border:1px solid #E7E0D5;border-radius:10px;padding:22px 26px;font-size:13px}}
-  .top{{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0B7A55;padding-bottom:10px;margin-bottom:14px}}
-  .brand{{font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:18px}}
+  .top{{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1A1C1E;padding-bottom:10px;margin-bottom:14px}}
+  .brand{{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:700;font-size:18px}}
   .brand small{{display:block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#736B60;margin-top:3px}}
-  h1{{font-family:'Playfair Display',Georgia,serif;font-size:19px;margin:0;color:#0B7A55;text-align:right}}
+  h1{{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:19px;margin:0;color:#1A1C1E;text-align:right}}
   .meta{{font-size:11px;color:#475569;text-align:right;margin-top:4px;line-height:1.5}}
   .meta b{{color:#211C17}}
   .lbl{{font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#736B60;margin:10px 0 3px}}
@@ -60,11 +60,11 @@ def build_license_invoice_html(d: dict) -> str:
   td{{font-size:12.5px;padding:7px 5px;border-bottom:1px solid #F2EFE9}}
   td.k{{color:#736B60;width:45%}}
   .total{{display:flex;justify-content:space-between;margin-top:14px;padding-top:10px;border-top:2px solid #211C17;
-          font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:17px}}
-  .total .amt{{color:#0B7A55}}
+          font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:700;font-size:17px}}
+  .total .amt{{color:#1A1C1E}}
   .foot{{margin-top:16px;font-size:10px;color:#736B60;line-height:1.5}}
   .toolbar{{max-width:600px;margin:0 auto 10px;text-align:right}}
-  .toolbar button{{font-size:12px;font-weight:600;background:#0B7A55;color:#fff;border:none;border-radius:8px;padding:7px 14px;cursor:pointer}}
+  .toolbar button{{font-size:12px;font-weight:600;background:#1A1C1E;color:#fff;border:none;border-radius:8px;padding:7px 14px;cursor:pointer}}
   @media print{{ @page{{size:A4;margin:12mm}} body{{background:#fff;padding:0}} .sheet{{border:none}} .toolbar{{display:none!important}} }}
 </style></head><body>
   <div class="toolbar"><button onclick="window.print()">{_esc(t('invoice_print'))}</button></div>

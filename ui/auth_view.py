@@ -73,7 +73,7 @@ def _render_login(cookie_mgr):
             )
             st.session_state.lang = chosen_lang
 
-            st.markdown(f"#### 🔒 {t('login_title')}")
+            st.markdown(f"#### :material/lock: {t('login_title')}")
             with st.form("login_form", clear_on_submit=False):
                 username = st.text_input(t("login_username"))
                 password = st.text_input(t("login_password"), type="password")
@@ -103,7 +103,7 @@ def _render_login(cookie_mgr):
             st.caption(t("default_admin_warning"))
 
             # Self-service recovery for Admin / Super-Admin (others: ask an admin)
-            with st.expander(f'🔑 {t("forgot_password")}'):
+            with st.expander(f':material/vpn_key: {t("forgot_password")}'):
                 st.caption(t("recover_help"))
                 ru = st.text_input(t("login_username"), key="recover_user")
                 if st.button(t("recover_btn"), key="recover_go", type="primary"):

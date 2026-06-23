@@ -36,7 +36,7 @@ def _eur_df(rows: list[dict], cols: list[str]) -> pd.DataFrame:
 
 
 def render_finance(user):
-    st.title(f"💰 {t('finance_title')}")
+    st.title(f":material/payments: {t('finance_title')}")
     st.caption(t("finance_help"))
 
     if not can(user, "view_finance"):
@@ -61,11 +61,11 @@ def render_finance(user):
     st.divider()
 
     tabs = st.tabs([
-        f"📊 {t('fin_tab_overview')}",
-        f"📅 {t('fin_tab_monthly')}",
-        f"🗓️ {t('fin_tab_yearly')}",
-        f"🚗 {t('fin_tab_vehicle')}",
-        f"🧾 {t('fin_tab_costs')}",
+        f":material/insights: {t('fin_tab_overview')}",
+        f":material/calendar_month: {t('fin_tab_monthly')}",
+        f":material/calendar_month: {t('fin_tab_yearly')}",
+        f":material/directions_car: {t('fin_tab_vehicle')}",
+        f":material/receipt_long: {t('fin_tab_costs')}",
     ])
 
     with tabs[0]:
@@ -158,7 +158,7 @@ def _totals_row(income: int, cost: int, net: int):
 
 # ── tab: costs (entry + recent) ──────────────────────────────────────────────
 def _costs_tab(user):
-    st.subheader(f"➕ {t('add_cost_section')}")
+    st.subheader(f":material/add: {t('add_cost_section')}")
     fleet = vrepo.list_vehicles()
     if not fleet:
         st.info(t("no_cars"))
@@ -186,7 +186,7 @@ def _costs_tab(user):
                 st.warning(t("fields_required"))
 
     st.divider()
-    st.subheader(f"📋 {t('recent_costs')}")
+    st.subheader(f":material/list: {t('recent_costs')}")
     recent = costs_repo.list_costs(limit=100)
     if not recent:
         st.info(t("no_costs"))

@@ -5,6 +5,8 @@ inline status-change and edit controls; `soft_delete_vehicle` gets the delete
 dialog (archive + optional hard-delete); archived vehicles can be restored from
 an expander at the bottom. All add/edit/delete forms live in `st.dialog` bodies.
 """
+import html
+
 import streamlit as st
 from config.i18n import t
 from config.roles import can
@@ -33,7 +35,7 @@ def _veh_label(v: dict) -> str:
 
 
 def render_fleet(user):
-    st.title(f"🚘 {t('nav_fleet')}")
+    st.title(f":material/directions_car: {t('nav_fleet')}")
 
     may_edit = can(user, "edit_fleet")
     may_del = can(user, "soft_delete_vehicle")
@@ -42,7 +44,7 @@ def render_fleet(user):
 
     head = st.columns([3, 1])
     head[0].caption(t("fleet_help"))
-    if may_edit and head[1].button(f'➕ {t("fleet_add")}', type="primary",
+    if may_edit and head[1].button(f':material/add: {t("fleet_add")}', type="primary",
                                     use_container_width=True):
         st.dialog(t("fleet_add"), width="large")(_add_dialog)(user)
 
@@ -89,7 +91,7 @@ def _fleet_grid(user, fleet, may_edit, may_del, may_hard, active_ids):
 def _vehicle_card(user, v, may_edit, may_del, may_hard, is_rented):
     vid = v["vehicle_id"]
     with st.container(border=True):
-        render_vehicle_thumb(vid, height=150)         # photo (or 🚘 placeholder) on top
+        render_vehicle_thumb(vid, height=150)         # photo (or :material/directions_car: placeholder) on top
         tc = st.columns([2, 1])
         with tc[0]:
             st.markdown(f'**{v["make_model"]}**')
@@ -102,11 +104,20 @@ def _vehicle_card(user, v, may_edit, may_del, may_hard, is_rented):
                 '<div style="font-size:.66rem;color:var(--muted);font-weight:500;'
                 f'text-transform:uppercase;letter-spacing:.04em">/{t("per_day")}</div></div>',
                 unsafe_allow_html=True)
-        st.markdown(status_badge(v["status"]), unsafe_allow_html=True)
-        st.caption(f'🔖 {v["license_plate"] or "—"} · 🎨 {v["color"] or "—"} · '
-                   f'📏 {v.get("mileage", 0):,} km')
+        # Status badge + (when on rental) an INLINE lock chip on the SAME line. A
+        # rented car keeps the identical card height as any other — the lock used to
+        # be a separate caption line that only some cards had, which made the 2-up
+        # grid ragged. The full message is a hover tooltip.
+        badge_html = status_badge(v["status"])
         if is_rented:
-            st.caption(f'🔒 {t("status_locked_rented")}')
+            badge_html += (
+                f'<span class="lock-chip" title="{html.escape(t("status_locked_rented"))}">'
+                f'<span class="msym">lock</span></span>'
+            )
+        st.markdown(badge_html, unsafe_allow_html=True)
+        st.caption(f':material/pin: {v["license_plate"] or "—"} · '
+                   f':material/palette: {v["color"] or "—"} · '
+                   f':material/speed: {v.get("mileage", 0):,} km')
 
         acts = _vehicle_actions(user, v, may_edit, may_del, may_hard, is_rented)
         # Full-width, labelled buttons stacked vertically so the name is always
@@ -125,19 +136,19 @@ def _vehicle_actions(user, v, may_edit, may_del, may_hard, is_rented):
     vid = v["vehicle_id"]
     acts = []  # (key_prefix, label, type, callback, disabled)
     if may_edit:
-        acts.append(("edt", f'✏️ {t("edit_btn")}', "primary",
+        acts.append(("edt", f':material/edit: {t("edit_btn")}', "primary",
                      lambda vid=vid: _open_edit(user, vid), False))
         if v["status"] != "In Garage":
-            acts.append(("gar", f'🅿️ {t("to_garage")}', "secondary",
+            acts.append(("gar", f':material/garage: {t("to_garage")}', "secondary",
                          lambda vid=vid: _set_status(user, vid, "In Garage"), is_rented))
         if v["status"] != "Maintenance":
-            acts.append(("mnt", f'🔧 {t("to_maintenance")}', "secondary",
+            acts.append(("mnt", f':material/build: {t("to_maintenance")}', "secondary",
                          lambda vid=vid: _set_status(user, vid, "Maintenance"), is_rented))
         if v["status"] in ("In Garage", "Maintenance"):
-            acts.append(("avl", f'✅ {t("to_available")}', "secondary",
+            acts.append(("avl", f':material/check_circle: {t("to_available")}', "secondary",
                          lambda vid=vid: _set_status(user, vid, "Available"), is_rented))
     if may_del:
-        acts.append(("fldel", f'🗑️ {t("soft_delete")}', "primary",
+        acts.append(("fldel", f':material/delete: {t("soft_delete")}', "primary",
                      lambda vid=vid, mh=may_hard: _open_delete(user, vid, mh), False))
     return acts
 
@@ -198,7 +209,7 @@ def _edit_dialog(user, vehicle_id):
     with cur_photo_col:
         render_vehicle_thumb(vehicle_id, height=120)
     if is_rented:
-        st.info(f'🔒 {t("status_locked_rented")}')
+        st.info(f':material/lock: {t("status_locked_rented")}')
 
     with st.form("edit_vehicle_form"):
         c1, c2 = st.columns(2)
@@ -237,7 +248,7 @@ def _edit_dialog(user, vehicle_id):
 def _photo_manager(user, vehicle_id):
     """Lazy multi-photo manager: only loads/renders the gallery when expanded."""
     n = vphotos.photo_count(vehicle_id)
-    if not st.toggle(f'🖼️ {t("manage_photos")} ({n})', key=f"pm_{vehicle_id}"):
+    if not st.toggle(f':material/image: {t("manage_photos")} ({n})', key=f"pm_{vehicle_id}"):
         return
     photos = vphotos.list_photos(vehicle_id)
     if photos:
@@ -247,7 +258,7 @@ def _photo_manager(user, vehicle_id):
             for ph, c in zip(photos[i:i + per_row], cols):
                 with c:
                     render_photo(ph["photo"], height=90)
-                    if st.button(f'🗑️', key=f'delph_{ph["photo_id"]}', use_container_width=True,
+                    if st.button(f':material/delete: ', key=f'delph_{ph["photo_id"]}', use_container_width=True,
                                  help=t("delete_btn")):
                         vphotos.delete_photo(ph["photo_id"])
                         invalidate_cache()
@@ -257,7 +268,7 @@ def _photo_manager(user, vehicle_id):
         st.caption(t("no_photos"))
     new_files = st.file_uploader(t("add_photos"), type=PHOTO_TYPES,
                                  accept_multiple_files=True, key=f"addph_{vehicle_id}")
-    if new_files and st.button(f'➕ {t("add_photos")}', key=f"addphbtn_{vehicle_id}", type="primary"):
+    if new_files and st.button(f':material/add: {t("add_photos")}', key=f"addphbtn_{vehicle_id}", type="primary"):
         vphotos.add_photos(vehicle_id, encode_many(new_files))
         invalidate_cache()
         audit_service.record(user, "add_photos", "vehicle", vehicle_id, str(len(new_files)))
@@ -272,13 +283,13 @@ def _delete_dialog(user, vehicle_id, may_hard):
         st.markdown(f'**{v["vehicle_id"]}** · {_veh_label(v)}')
     confirm = st.checkbox(t("delete_confirm"), key=f"del_confirm_{vehicle_id}")
     c1, c2 = st.columns(2)
-    if c1.button(f'📁 {t("soft_delete")}', disabled=not confirm, use_container_width=True):
+    if c1.button(f':material/archive: {t("soft_delete")}', disabled=not confirm, use_container_width=True):
         vrepo.soft_delete(vehicle_id)
         audit_service.record(user, "archive_vehicle", "vehicle", vehicle_id)
         st.toast(t("soft_deleted_done"))
         st.rerun()
     if may_hard:
-        if c2.button(f'🗑️ {t("hard_delete")}', disabled=not confirm,
+        if c2.button(f':material/delete: {t("hard_delete")}', disabled=not confirm,
                      type="primary", use_container_width=True):
             vrepo.hard_delete(vehicle_id)
             audit_service.record(user, "delete_vehicle", "vehicle", vehicle_id)
@@ -291,7 +302,7 @@ def _archived_section(user):
     if not archived:
         return
     st.divider()
-    with st.expander(f"📂 {t('archived_list')} ({len(archived)})"):
+    with st.expander(f":material/folder_open: {t('archived_list')} ({len(archived)})"):
         for v in archived:
             cc1, cc2, cc3 = st.columns([2, 2, 1])
             cc1.markdown(f'**{v["vehicle_id"]}** {v["make_model"]}')

@@ -3,14 +3,19 @@ Primary navigation — a minimalistic **two-state sidebar** (Gemini-style) on th
 
 Rendered with native Streamlit widgets inside ``st.sidebar``: a custom collapse
 toggle on top, then a brand header (mark + name + tagline), the main sections as
-left-aligned icon+label rows, and a bottom-pinned footer with the reminders bell,
-settings, the account row (avatar + name + role) and logout. A click on the toggle
+left-aligned icon+label rows, and a bottom-pinned footer with the reminders bell
+and a **profile menu** — an ``st.popover`` (account icon + name) that opens a
+dropdown holding the Settings and Logout actions (which used to be standalone
+footer buttons). A click on the toggle
 flips ``session_state['nav_expanded']`` between an EXPANDED label list and a slim
 COLLAPSED icon rail — the sidebar is never hidden, so the icons stay reachable, and
-page content reflows because the rail keeps a real (non-zero) width. The light
-surface, rounded hover highlight, soft-emerald active state and the per-state width
-all live in ui/theme.py (the collapsed rail hides labels purely in CSS). Section
-modules still live in views/ (not pages/), so Streamlit builds no native page menu.
+page content reflows because the rail keeps a real (non-zero) width. The styling is
+fully monochrome (black/white icons, no brand colour): a white surface + rounded
+hover highlight + soft neutral-grey active pill (Gemini-style) when EXPANDED, and a
+bare icon rail with NO panel background / border / hover-fill when COLLAPSED. All of
+that plus the per-state width lives in ui/theme.py (the collapsed rail hides labels
+purely in CSS). Section modules still live in views/ (not pages/), so Streamlit
+builds no native page menu.
 
 We drive collapse ourselves (Streamlit's native «/» is hidden in ui/theme.py)
 because the native control only does full-or-hidden and its state isn't readable
@@ -55,8 +60,8 @@ def _initial(s: str, fallback: str = "B") -> str:
 def top_nav(user, cookie_mgr, cookies) -> str:
     """Render the two-state navigation sidebar: a collapse toggle, brand header,
     the main sections as icon+label rows (icons-only when collapsed), then a
-    bottom-pinned footer with the reminders bell, settings, the account row and
-    logout. Returns the selected page key.
+    bottom-pinned footer with the reminders bell and the profile menu (an
+    st.popover holding Settings + Logout). Returns the selected page key.
 
     Sections, role-gating, widget keys and routing are unchanged — only the
     presentation (expanded list ⇄ collapsed icon rail) is driven from here +
@@ -112,28 +117,32 @@ def top_nav(user, cookie_mgr, cookies) -> str:
         # Spacer pushes the footer group to the bottom of the rail
         st.markdown('<div class="rail-spacer"></div>', unsafe_allow_html=True)
 
-        # Footer: reminders bell · settings · account avatar · logout
+        # Footer: reminders bell · profile menu (Settings + Logout in a dropdown)
         if can(user, "create_reservation"):
             render_bell(user)
-        is_settings = st.session_state.current_page == "settings"
-        if st.button(f":material/settings: {t('nav_settings')}", key="nav_settings", help=t("nav_settings"),
-                     type="primary" if is_settings else "secondary",
-                     use_container_width=True):
-            if not is_settings:
-                st.session_state.current_page = "settings"
-                st.rerun()
+
+        # Account row is now a CLICK-TO-OPEN dropdown (st.popover): the trigger shows
+        # the account icon + name (icon-only when the rail is collapsed, via theme
+        # CSS) and the panel holds the Settings and Logout actions — replacing the
+        # old standalone footer settings/logout buttons. Esc / outside-click closes
+        # it; either action st.rerun()s, which also dismisses the popover.
         name = user["full_name"] or user["username"]
         role_label = t(ROLE_LABEL_KEY.get(user["role"], "role_visitor"))
-        st.markdown(
-            f'<div class="rail-user-row" title="{html.escape(name)} · {html.escape(role_label)}">'
-            f'<div class="rail-user-avatar">{_initial(name, "U")}</div>'
-            f'<div class="rail-user-text">'
-            f'<div class="ru-name">{html.escape(name)}</div>'
-            f'<div class="ru-role">{html.escape(role_label)}</div>'
-            f'</div></div>',
-            unsafe_allow_html=True,
-        )
-        if st.button(f":material/logout: {t('logout')}", key="logout_btn", help=t("logout"), use_container_width=True):
-            auth_view.logout(cookie_mgr, cookies)
+        with st.popover(f":material/account_circle: {name}", help=name,
+                        use_container_width=True):
+            st.markdown(
+                f'<div class="acct-card">'
+                f'<div class="acct-name">{html.escape(name)}</div>'
+                f'<div class="acct-role">{html.escape(role_label)}</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+            if st.button(f":material/settings: {t('nav_settings')}", key="menu_settings",
+                         help=t("nav_settings"), use_container_width=True):
+                st.session_state.current_page = "settings"
+                st.rerun()
+            if st.button(f":material/logout: {t('logout')}", key="logout_btn",
+                         help=t("logout"), use_container_width=True):
+                auth_view.logout(cookie_mgr, cookies)
 
     return st.session_state.current_page

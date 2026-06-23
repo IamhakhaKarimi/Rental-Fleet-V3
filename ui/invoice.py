@@ -106,22 +106,22 @@ def build_invoice_html(deal: dict, charges: list[dict], business_name: str,
     return f"""<!DOCTYPE html><html lang="{lang}"><head><meta charset="utf-8"/>
 <title>{_esc(T('invoice_heading'))} {_esc(deal.get('deal_id',''))}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
   * {{ box-sizing: border-box; }}
-  body {{ font-family:'Inter',system-ui,sans-serif; color:#211C17; margin:0;
+  body {{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:#211C17; margin:0;
          background:#F2EFE9; padding:16px; }}
   /* Compact sheet — narrower than A4 so it always fits one page */
   .sheet {{ max-width:640px; margin:0 auto; background:#fff; border:1px solid #E7E0D5;
             border-radius:10px; padding:20px 24px; font-size:12px; }}
   .top {{ display:flex; justify-content:space-between; align-items:flex-start;
-          border-bottom:2px solid #0B7A55; padding-bottom:10px; margin-bottom:14px; }}
-  .brand {{ font-family:'Playfair Display',Georgia,serif; font-weight:700; font-size:17px;
+          border-bottom:2px solid #1A1C1E; padding-bottom:10px; margin-bottom:14px; }}
+  .brand {{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; font-weight:700; font-size:17px;
             color:#211C17; line-height:1.1; }}
-  .brand small {{ display:block; font-family:'Inter'; font-weight:500; font-size:9px;
+  .brand small {{ display:block; font-family:'Plus Jakarta Sans'; font-weight:500; font-size:9px;
                   letter-spacing:.12em; text-transform:uppercase; color:#736B60; margin-top:3px; }}
   .inv-title {{ text-align:right; }}
-  .inv-title h1 {{ font-family:'Playfair Display',Georgia,serif; font-size:20px; margin:0;
-                   color:#0B7A55; letter-spacing:.03em; }}
+  .inv-title h1 {{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; font-size:20px; margin:0;
+                   color:#1A1C1E; letter-spacing:.03em; }}
   .meta {{ font-size:11px; color:#475569; margin-top:4px; line-height:1.5; }}
   .meta b {{ color:#211C17; }}
   .cols {{ display:flex; gap:22px; margin-bottom:12px; }}
@@ -138,24 +138,24 @@ def build_invoice_html(deal: dict, charges: list[dict], business_name: str,
   .totals {{ margin-top:8px; display:flex; justify-content:flex-end; }}
   .totals table {{ width:auto; min-width:220px; }}
   .totals td {{ border:none; padding:3px 5px; }}
-  .grand td {{ font-family:'Playfair Display',Georgia,serif; font-weight:700; font-size:15px;
+  .grand td {{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; font-weight:700; font-size:15px;
                color:#211C17; border-top:2px solid #211C17; padding-top:7px; }}
-  .grand td.num {{ color:#0B7A55; }}
+  .grand td.num {{ color:#1A1C1E; }}
   .chip {{ display:inline-block; font-size:9px; font-weight:600; padding:2px 8px;
-           border-radius:999px; background:#E3F2EC; color:#0B7A55; margin-top:10px; }}
+           border-radius:999px; background:#EDEDEA; color:#1A1C1E; margin-top:10px; }}
   /* Terms & conditions — small two-column list so it still fits one A4 page */
   .terms {{ margin-top:14px; padding-top:10px; border-top:1px dashed #CBD5E1; }}
-  .terms h3 {{ font-family:'Playfair Display',Georgia,serif; font-size:11px; margin:0 0 6px;
+  .terms h3 {{ font-family:'Plus Jakarta Sans',system-ui,sans-serif; font-size:11px; margin:0 0 6px;
                text-transform:uppercase; letter-spacing:.04em; color:#211C17; }}
   .terms ol {{ margin:0; padding-left:16px; columns:2; column-gap:20px;
                font-size:8.2px; line-height:1.35; color:#475569; }}
   .terms li {{ margin-bottom:3px; break-inside:avoid; }}
   .foot {{ margin-top:12px; font-size:9px; color:#736B60; line-height:1.5; }}
   .toolbar {{ max-width:640px; margin:0 auto 10px; text-align:right; }}
-  .toolbar button {{ font-family:'Inter',sans-serif; font-size:12px; font-weight:600;
-           background:#0B7A55; color:#fff; border:none; border-radius:8px;
+  .toolbar button {{ font-family:'Plus Jakarta Sans',sans-serif; font-size:12px; font-weight:600;
+           background:#1A1C1E; color:#fff; border:none; border-radius:8px;
            padding:7px 14px; cursor:pointer; }}
-  .toolbar button:hover {{ background:#095E42; }}
+  .toolbar button:hover {{ background:#3F3F46; }}
   @media print {{
     @page {{ size: A4; margin: 10mm; }}
     body {{ background:#fff; padding:0; }}
@@ -181,7 +181,7 @@ def build_invoice_html(deal: dict, charges: list[dict], business_name: str,
       <div class="box">
         <div class="lbl">{_esc(T('bill_to'))}</div>
         <div class="val"><b>{_esc(deal.get('client_name',''))}</b><br>
-          📞 {_esc(deal.get('phone','') or '—')} &nbsp; 🪪 {_esc(deal.get('id_passport','') or '—')}</div>
+          {_esc(deal.get('phone','') or '—')} &nbsp; {_esc(deal.get('id_passport','') or '—')}</div>
       </div>
       <div class="box">
         <div class="lbl">{_esc(T('invoice_vehicle'))}</div>

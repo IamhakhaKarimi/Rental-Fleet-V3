@@ -22,20 +22,20 @@ from ui.license_invoice import render_license_invoice
 
 
 def render_settings(user):
-    st.title(f"⚙️ {t('settings_title')}")
+    st.title(f":material/settings: {t('settings_title')}")
     st.caption(t("settings_help"))
 
     specs = []
     if can(user, "manage_users"):                    # admin+ (logo); name is super-admin-only inside
-        specs.append(("business", f"🏢 {t('tab_business')}"))
+        specs.append(("business", f":material/business: {t('tab_business')}"))
     if can(user, "manage_users"):
-        specs.append(("users", f"👥 {t('tab_users')}"))
+        specs.append(("users", f":material/group: {t('tab_users')}"))
     if can(user, "edit_business_settings"):          # super-admin only
-        specs.append(("license", f"🔑 {t('tab_license')}"))
-    specs.append(("language", f"🌐 {t('tab_language')}"))
-    specs.append(("password", f"👤 {t('tab_profile')}"))
+        specs.append(("license", f":material/vpn_key: {t('tab_license')}"))
+    specs.append(("language", f":material/language: {t('tab_language')}"))
+    specs.append(("password", f":material/person: {t('tab_profile')}"))
     if can(user, "manage_users"):
-        specs.append(("activity", f"🕑 {t('tab_activity')}"))
+        specs.append(("activity", f":material/history: {t('tab_activity')}"))
 
     tabs = st.tabs([label for _, label in specs])
     for (kind, _), tab in zip(specs, tabs):
@@ -47,7 +47,7 @@ def render_settings(user):
 
 # ━━━━━━━━━━━━━━ Language (everyone)
 def _language_tab(user):
-    st.subheader(f"🌐 {t('tab_language')}")
+    st.subheader(f":material/language: {t('tab_language')}")
     st.caption(t("language_help"))
     # Albanian (and any other STAFF_ONLY_LANGS) is offered only to staff roles
     # (employer/admin/super_admin → level >= 1); visitors see the public set.
@@ -69,7 +69,7 @@ def _language_tab(user):
 
 # ━━━━━━━━━━━━━━ Business (admin+ for logo; name super-admin only)
 def _business_tab(user):
-    st.subheader(f"🏢 {t('business_settings')}")
+    st.subheader(f":material/business: {t('business_settings')}")
     if can(user, "edit_business_settings"):
         with st.form("business_form"):
             bname = st.text_input(t("business_name"), value=cfg.get_business_name(),
@@ -81,7 +81,7 @@ def _business_tab(user):
                 st.rerun()
         st.divider()
 
-    st.subheader(f"🖼️ {t('company_logo')}")
+    st.subheader(f":material/image: {t('company_logo')}")
     st.caption(t("logo_help"))
     cur_logo = cfg.get_logo()
     if cur_logo:
@@ -107,7 +107,7 @@ def _business_tab(user):
 
 # ━━━━━━━━━━━━━━ Users (admin+)
 def _users_tab(user):
-    st.subheader(f"➕ {t('create_user')}")
+    st.subheader(f":material/add: {t('create_user')}")
     roles_allowed = assignable_roles(user)
     with st.form("create_user_form", clear_on_submit=True):
         c1, c2 = st.columns(2)
@@ -127,16 +127,16 @@ def _users_tab(user):
                 st.error(t(msg))
 
     st.divider()
-    st.subheader(f"📋 {t('users_list')}")
+    st.subheader(f":material/list: {t('users_list')}")
     for u in auth.all_users():
         uname, urole = u["username"], u["role"]
         is_me = uname == user["username"]
         locked = auth.is_last_active_super_admin(uname)
         with st.container(border=True):
             ua, ub, uc, ud = st.columns([2, 1.8, 1.4, 1.4])
-            ua.markdown(f'**{uname}**  \n{u["full_name"] or "—"}  \n✉️ {u.get("email") or "—"}')
+            ua.markdown(f'**{uname}**  \n{u["full_name"] or "—"}  \n:material/mail: {u.get("email") or "—"}')
             ub.caption(t(ROLE_LABEL_KEY.get(urole, "role_visitor")))
-            ub.caption("✅ " + t("active") if u["is_active"] else "🔴 " + t("deactivate"))
+            ub.caption(":material/check_circle: " + t("active") if u["is_active"] else ":material/error: " + t("deactivate"))
 
             if not is_me and urole in assignable_roles(user):
                 new_r = uc.selectbox(t("role"), options=assignable_roles(user),
@@ -164,7 +164,7 @@ def _users_tab(user):
 
             # manage account: rename / email / reset password (child users only)
             if not is_me and urole in assignable_roles(user):
-                with st.expander(f'🔧 {t("manage_account")}'):
+                with st.expander(f':material/build: {t("manage_account")}'):
                     with st.form(f"rename_{uname}", clear_on_submit=True):
                         new_name = st.text_input(t("change_username"), value=uname, key=f"newname_{uname}")
                         if st.form_submit_button(t("change_username")):
@@ -198,7 +198,7 @@ def _users_tab(user):
 
 # ━━━━━━━━━━━━━━ License (super-admin) — annual unlock + license invoice + SMTP
 def _license_tab(user):
-    st.subheader(f"🔑 {t('tab_license')}")
+    st.subheader(f":material/vpn_key: {t('tab_license')}")
     st.caption(t("license_help"))
     ly = lic.licensed_year()
     st.info(t("license_status").format(y=ly))
@@ -220,7 +220,7 @@ def _license_tab(user):
 
     st.divider()
     # ── License records (CRUD)
-    st.subheader(f"📋 {t('license_records')}")
+    st.subheader(f":material/list: {t('license_records')}")
     recs = lrepo.list_licenses()
     if not recs:
         st.info(t("no_licenses"))
@@ -252,7 +252,7 @@ def _license_tab(user):
 
     st.divider()
     # ── Add a license
-    st.subheader(f"➕ {t('add_license')}")
+    st.subheader(f":material/add: {t('add_license')}")
     with st.form("lic_add_form", clear_on_submit=True):
         licensee = st.text_input(t("license_licensee"), value=cfg.get_business_name())
         c1, c2, c3 = st.columns(3)
@@ -281,12 +281,12 @@ def _license_tab(user):
 
 # ━━━━━━━━━━━━━━ Danger zone (super-admin) — reset Finance / Fleet data
 def _danger_zone(user):
-    st.subheader(f'⚠️ {t("danger_zone")}')
+    st.subheader(f':material/warning: {t("danger_zone")}')
     # Two independent, confirmation-gated resets. Each requires the exact word
     # RESET typed in, so a stray click can never wipe data. Both are audited.
     f1, f2 = st.columns(2)
     with f1, st.container(border=True):
-        st.markdown(f'**💰 {t("reset_finance_btn")}**')
+        st.markdown(f'**:material/payments: {t("reset_finance_btn")}**')
         st.caption(t("reset_finance_help"))
         cf = st.text_input(t("reset_confirm_label"), key="dzc_fin")
         if st.button(t("reset_finance_btn"), key="dzreset_fin", type="primary",
@@ -296,7 +296,7 @@ def _danger_zone(user):
             st.success(t("reset_done"))
             st.rerun()
     with f2, st.container(border=True):
-        st.markdown(f'**🚗 {t("reset_fleet_btn")}**')
+        st.markdown(f'**:material/directions_car: {t("reset_fleet_btn")}**')
         st.caption(t("reset_fleet_help"))
         cl = st.text_input(t("reset_confirm_label"), key="dzc_fleet")
         if st.button(t("reset_fleet_btn"), key="dzreset_fleet", type="primary",
@@ -367,10 +367,10 @@ def _license_delete_dialog(user, license_id: int):
 
 
 def _smtp_section(user):
-    st.subheader(f"✉️ {t('smtp_settings')}")
+    st.subheader(f":material/mail: {t('smtp_settings')}")
     st.caption(t("smtp_help"))
     c = email_service.smtp_config()
-    badge = "✅ " + t("smtp_configured") if email_service.is_configured() else "⚠️ " + t("smtp_not_set")
+    badge = ":material/check_circle: " + t("smtp_configured") if email_service.is_configured() else ":material/warning: " + t("smtp_not_set")
     st.caption(badge)
     with st.form("smtp_form"):
         s1, s2 = st.columns(2)
@@ -389,7 +389,7 @@ def _smtp_section(user):
 
 # ━━━━━━━━━━━━━━ Profile + Password (everyone)
 def _password_tab(user):
-    st.subheader(f"👤 {t('my_profile')}")
+    st.subheader(f":material/person: {t('my_profile')}")
     with st.form("my_name_form"):
         cur_name = (st.session_state.get("user") or {}).get("full_name") or ""
         my_name = st.text_input(t("full_name"), value=cur_name)
@@ -413,7 +413,7 @@ def _password_tab(user):
             st.rerun()
 
     st.divider()
-    st.subheader(f"🔐 {t('change_password')}")
+    st.subheader(f":material/password: {t('change_password')}")
     with st.form("change_pw_form", clear_on_submit=True):
         cur = st.text_input(t("current_password"), type="password")
         nw = st.text_input(t("new_password"), type="password")
@@ -432,14 +432,14 @@ def _password_tab(user):
 
 # ━━━━━━━━━━━━━━ Activity log (admin+) — masked + filterable
 def _activity_tab(user):
-    st.subheader(f"🕑 {t('activity_log')}")
+    st.subheader(f":material/history: {t('activity_log')}")
     rows = audit_service.recent(limit=500)
     if not rows:
         st.info(t("no_activity"))
         return
 
     # ── Return activity (admin+ may undo an archive or a cancellation) ───────
-    st.markdown(f"#### ↩️ {t('return_activity')}")
+    st.markdown(f"#### :material/undo: {t('return_activity')}")
     st.caption(t("return_activity_help"))
     _return_activity_section(user, rows)
     st.divider()
@@ -498,7 +498,7 @@ def _return_activity_section(user, rows):
             v = vrepo.get_vehicle(eid)
             if v and v["status"] == "DELETED":
                 items.append(("vehicle", eid, r["id"],
-                              f'🚘 {eid} · {v.get("make_model") or "—"}'))
+                              f':material/directions_car: {eid} · {v.get("make_model") or "—"}'))
         elif act == "cancel_rental" and ent == "rental":
             if ("rent", eid) in seen:
                 continue
@@ -506,7 +506,7 @@ def _return_activity_section(user, rows):
             d = rrepo.get_rental_full(eid)
             if d and d["status"] == "Closed":
                 items.append(("rental", eid, r["id"],
-                              f'📋 {eid} · {d.get("client_name") or "—"} · {d.get("make_model") or "—"}'))
+                              f':material/list: {eid} · {d.get("client_name") or "—"} · {d.get("make_model") or "—"}'))
 
     if not items:
         st.caption("—")
