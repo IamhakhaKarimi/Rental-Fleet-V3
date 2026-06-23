@@ -53,6 +53,20 @@ FONT_IMPORT = (
 # changes — so it is safe across every page. Motion respects prefers-reduced-motion.
 _POLISH_CSS = """
 <style>
+/* ===== Login screen: centre the card so credentials need NO scrolling =====
+   _render_login emits a hidden .login-mode marker, and the auth gate st.stop()s
+   before the sidebar/nav render — so the page is just this one card. Vertically
+   centre it in the viewport and trim the page padding. `safe center` falls back to
+   top-alignment on very short windows so a tall card is never clipped/unreachable. */
+[data-testid="stMain"] .block-container:has(.login-mode) {
+  /* leave room for Streamlit's top toolbar (~3rem) so the card never spills into a
+     page scroll, even on shorter windows */
+  min-height: calc(100vh - 5rem) !important;
+  display: flex !important; flex-direction: column; justify-content: safe center;
+  padding-top: 0.75rem !important; padding-bottom: 0.75rem !important;
+}
+.login-mode { display: none; }
+
 /* Gentle, meaningful motion — only when the user hasn't asked to reduce it */
 @media (prefers-reduced-motion: no-preference) {
   .stButton > button,

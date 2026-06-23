@@ -17,7 +17,7 @@ import time
 import streamlit as st
 
 from config.i18n import t, DEFAULT_LANG
-from config.settings import APP_NAME, APP_TAGLINE, LANGUAGES, STAFF_ONLY_LANGS
+from config.settings import APP_NAME, APP_TAGLINE, LANGUAGES
 from services import auth_service as auth
 from data.repositories import app_settings as app_settings_repo
 
@@ -48,7 +48,10 @@ def ensure_authenticated(cookie_mgr, cookies: dict) -> dict:
 
 
 def _render_login(cookie_mgr):
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    # Marker: ui/theme.py vertically centres the login card (and trims page padding)
+    # so the credential fields are reachable without scrolling. The auth gate
+    # st.stop()s before the sidebar/nav render, so the page is only this card.
+    st.markdown('<div class="login-mode"></div>', unsafe_allow_html=True)
     _, mid, _ = st.columns([1, 1.1, 1])
     with mid:
         with st.container(border=True):
@@ -60,15 +63,16 @@ def _render_login(cookie_mgr):
 
             # Language picker — the choice drives the whole login screen AND is
             # carried into the app after sign-in (persisted to the user's profile
-            # on submit). Staff-only languages (e.g. Albanian) are hidden here
-            # because the role isn't known until authentication.
-            public_langs = [c for c in LANGUAGES if c not in STAFF_ONLY_LANGS]
+            # on submit). ALL languages are offered here, including Albanian (Shqip):
+            # the login is staff-facing, so the STAFF_ONLY_LANGS gate (which still
+            # applies to the in-app Language tab) isn't enforced on the sign-in form.
+            login_langs = list(LANGUAGES)
             cur_lang = st.session_state.get("lang", DEFAULT_LANG)
-            if cur_lang not in public_langs:
+            if cur_lang not in login_langs:
                 cur_lang = DEFAULT_LANG
             chosen_lang = st.selectbox(
-                t("language"), public_langs,
-                index=public_langs.index(cur_lang),
+                t("language"), login_langs,
+                index=login_langs.index(cur_lang),
                 format_func=lambda l: LANGUAGES[l], key="login_lang",
             )
             st.session_state.lang = chosen_lang
