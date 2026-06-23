@@ -122,6 +122,9 @@ def _period_tab(rows: list[dict], heading: str):
         t("col_net"):    format_eur(r["net"]),
     } for r in rows]
     st.dataframe(pd.DataFrame(table), use_container_width=True, hide_index=True)
+    _totals_row(sum(r["income"] for r in rows),
+                sum(r["cost"] for r in rows),
+                sum(r["net"] for r in rows))
 
 
 # ── tab: by vehicle ──────────────────────────────────────────────────────────
@@ -139,6 +142,18 @@ def _by_vehicle_tab():
         t("col_net"):    format_eur(r["net"]),
     } for r in rows]
     st.dataframe(pd.DataFrame(table), use_container_width=True, hide_index=True)
+    _totals_row(sum(r["income"] for r in rows),
+                sum(r["cost"] for r in rows),
+                sum(r["net"] for r in rows))
+
+
+def _totals_row(income: int, cost: int, net: int):
+    """Shared income / cost / net summary tiles for a finance sub-tab."""
+    st.caption(f"**{t('fin_totals')}**")
+    m1, m2, m3 = st.columns(3)
+    with m1: kpi_tile("total_revenue", format_eur(income), accent=True)
+    with m2: kpi_tile("total_cost",    format_eur(cost))
+    with m3: kpi_tile("net_profit",    format_eur(net), accent=net >= 0)
 
 
 # ── tab: costs (entry + recent) ──────────────────────────────────────────────
@@ -176,6 +191,9 @@ def _costs_tab(user):
     if not recent:
         st.info(t("no_costs"))
         return
+    tc1, _ = st.columns(2)
+    with tc1:
+        kpi_tile("total_cost", format_eur(costs_repo.cost_total()))
     for c in recent:
         type_label = t(f'cost_{c["type"]}')
         meta = f'{type_label} · {c["period_date"][:10]}'

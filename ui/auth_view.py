@@ -17,7 +17,7 @@ import time
 import streamlit as st
 
 from config.i18n import t, DEFAULT_LANG
-from config.settings import APP_NAME, APP_TAGLINE
+from config.settings import APP_NAME, APP_TAGLINE, LANGUAGES, STAFF_ONLY_LANGS
 from services import auth_service as auth
 from data.repositories import app_settings as app_settings_repo
 
@@ -57,6 +57,22 @@ def _render_login(cookie_mgr):
                 f'<small>{APP_TAGLINE}</small></div>',
                 unsafe_allow_html=True,
             )
+
+            # Language picker — the choice drives the whole login screen AND is
+            # carried into the app after sign-in (persisted to the user's profile
+            # on submit). Staff-only languages (e.g. Albanian) are hidden here
+            # because the role isn't known until authentication.
+            public_langs = [c for c in LANGUAGES if c not in STAFF_ONLY_LANGS]
+            cur_lang = st.session_state.get("lang", DEFAULT_LANG)
+            if cur_lang not in public_langs:
+                cur_lang = DEFAULT_LANG
+            chosen_lang = st.selectbox(
+                t("language"), public_langs,
+                index=public_langs.index(cur_lang),
+                format_func=lambda l: LANGUAGES[l], key="login_lang",
+            )
+            st.session_state.lang = chosen_lang
+
             st.markdown(f"#### 🔒 {t('login_title')}")
             with st.form("login_form", clear_on_submit=False):
                 username = st.text_input(t("login_username"))
@@ -70,8 +86,12 @@ def _render_login(cookie_mgr):
                     st.error(t("login_failed"))
                 else:
                     token, expires_at = auth.create_session(u["username"], remember)
+                    # Persist the language chosen on the login screen as this
+                    # user's preference, then sign in with it.
+                    auth.set_user_lang(u["username"], chosen_lang)
+                    u["lang"] = chosen_lang
                     st.session_state.user = u
-                    _apply_user_lang(u)
+                    st.session_state.lang = chosen_lang
                     st.session_state.pop("_cookie_tries", None)
                     cookie_mgr.set(COOKIE_NAME, token, expires_at=expires_at, key="set_login_cookie")
                     # Let the cookie component flush the write to the browser before

@@ -5,12 +5,11 @@ inline status-change and edit controls; `soft_delete_vehicle` gets the delete
 dialog (archive + optional hard-delete); archived vehicles can be restored from
 an expander at the bottom. All add/edit/delete forms live in `st.dialog` bodies.
 """
-import pandas as pd
 import streamlit as st
 from config.i18n import t
 from config.roles import can
 from config.settings import CURRENCY_SYMBOL
-from ui.components import format_eur
+from ui.components import format_eur, status_badge
 from ui.photos import PHOTO_TYPES, encode_many, render_photo, render_vehicle_thumb, invalidate_cache
 from services import audit_service
 from data.repositories import vehicles as vrepo
@@ -39,12 +38,16 @@ def render_fleet(user):
     may_edit = can(user, "edit_fleet")
     may_del = can(user, "soft_delete_vehicle")
     may_hard = can(user, "hard_delete_vehicle")
+    privileged = may_edit or may_del
 
-    if may_edit and st.button(f'➕ {t("fleet_add")}', type="primary"):
+    head = st.columns([3, 1])
+    head[0].caption(t("fleet_help"))
+    if may_edit and head[1].button(f'➕ {t("fleet_add")}', type="primary",
+                                    use_container_width=True):
         st.dialog(t("fleet_add"), width="large")(_add_dialog)(user)
 
-    q = st.text_input(t("search"), placeholder=t("search"), key="fl_search")
-
+    q = st.text_input(t("search"), placeholder=t("search"), key="fl_search",
+                      label_visibility="collapsed")
     fleet = vrepo.list_vehicles()
     if q:
         lo = q.lower()
@@ -54,78 +57,97 @@ def render_fleet(user):
         ).lower()]
     st.caption(f"{len(fleet)} {t('col_count')}")
 
-    if not (may_edit or may_del):
-        _read_only_table(fleet)
-        return
-
     if not fleet:
         st.info(t("no_cars"))
     else:
-        active_ids = {r["vehicle_id"] for r in rrepo.list_active_rentals_with_vehicle()}
-        _action_table(user, fleet, may_edit, may_del, may_hard, active_ids)
+        active_ids = ({r["vehicle_id"] for r in rrepo.list_active_rentals_with_vehicle()}
+                      if privileged else set())
+        _fleet_grid(user, fleet, may_edit, may_del, may_hard, active_ids)
 
-    _archived_section(user)
-
-
-def _read_only_table(fleet):
-    rows = [{
-        t("col_id"):      v["vehicle_id"],
-        t("col_model"):   v["make_model"],
-        t("col_year"):    v["year"] or "—",
-        t("col_plate"):   v["license_plate"] or "—",
-        t("col_color"):   v["color"] or "—",
-        t("col_mileage"): f'{v["mileage"]:,}',
-        t("col_status"):  t(v["status"]),
-        t("col_rate"):    format_eur(v["base_daily_rate"]),
-        t("col_notes"):   v["notes"] or "",
-    } for v in fleet]
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    if privileged:
+        _archived_section(user)
 
 
-# Column weights: ID, Model, Year, Plate, Status, Rate, Actions
-_WEIGHTS = [1.1, 2.2, 0.8, 1.3, 2.4, 1.1, 1.6]
+# Cards per row on desktop; the responsive CSS in ui/theme.py collapses these to a
+# single full-width column on phones, so each card stays legible without zooming.
+_GRID_COLS = 2
 
 
-def _action_table(user, fleet, may_edit, may_del, may_hard, active_ids):
-    hdr = st.columns(_WEIGHTS)
-    for col, key in zip(hdr, ("col_id", "col_model", "col_year", "col_plate",
-                              "col_status", "col_rate", "col_actions")):
-        col.markdown(f"**{t(key)}**")
-    st.divider()
+def _fleet_grid(user, fleet, may_edit, may_del, may_hard, active_ids):
+    """Browse-style grid of vehicle cards (photo + specs + prominent price + typed
+    actions), inspired by modern car-rental listings. Functionally identical to the
+    old table — same search, same CRUD, same status controls — only re-presented.
+    With no edit/delete rights the cards simply render without action buttons."""
+    for i in range(0, len(fleet), _GRID_COLS):
+        row = st.columns(_GRID_COLS)
+        for v, col in zip(fleet[i:i + _GRID_COLS], row):
+            with col:
+                _vehicle_card(user, v, may_edit, may_del, may_hard,
+                              v["vehicle_id"] in active_ids)
 
-    for v in fleet:
-        vid = v["vehicle_id"]
-        c = st.columns(_WEIGHTS)
-        c[0].markdown(vid)
-        c[1].markdown(v["make_model"])
-        c[2].markdown(str(v["year"] or "—"))
-        c[3].markdown(v["license_plate"] or "—")
 
-        # Status cell — label + (for editors) immediate status-change buttons.
-        # Manual status changes are locked while the car is on an active rental.
-        is_rented = vid in active_ids
-        with c[4]:
-            st.markdown(t(v["status"]))
-            if may_edit:
-                sb = st.columns(3)
-                if sb[0].button("🅿️", key=f"gar_{vid}", help=t("to_garage"), disabled=is_rented):
-                    _set_status(user, vid, "In Garage")
-                if sb[1].button("🔧", key=f"mnt_{vid}", help=t("to_maintenance"), disabled=is_rented):
-                    _set_status(user, vid, "Maintenance")
-                if v["status"] in ("In Garage", "Maintenance"):
-                    if sb[2].button("✅", key=f"avl_{vid}", help=t("to_available"), disabled=is_rented):
-                        _set_status(user, vid, "Available")
+def _vehicle_card(user, v, may_edit, may_del, may_hard, is_rented):
+    vid = v["vehicle_id"]
+    with st.container(border=True):
+        render_vehicle_thumb(vid, height=150)         # photo (or 🚘 placeholder) on top
+        tc = st.columns([2, 1])
+        with tc[0]:
+            st.markdown(f'**{v["make_model"]}**')
+            st.caption(f'{v["year"] or "—"} · {vid}')
+        with tc[1]:
+            st.markdown(
+                '<div style="text-align:right;line-height:1.05">'
+                '<span style="font-family:var(--font-display);font-weight:700;'
+                f'font-size:1.2rem;color:var(--accent)">{format_eur(v["base_daily_rate"])}</span>'
+                '<div style="font-size:.66rem;color:var(--muted);font-weight:500;'
+                f'text-transform:uppercase;letter-spacing:.04em">/{t("per_day")}</div></div>',
+                unsafe_allow_html=True)
+        st.markdown(status_badge(v["status"]), unsafe_allow_html=True)
+        st.caption(f'🔖 {v["license_plate"] or "—"} · 🎨 {v["color"] or "—"} · '
+                   f'📏 {v.get("mileage", 0):,} km')
+        if is_rented:
+            st.caption(f'🔒 {t("status_locked_rented")}')
 
-        c[5].markdown(format_eur(v["base_daily_rate"]))
+        acts = _vehicle_actions(user, v, may_edit, may_del, may_hard, is_rented)
+        # Full-width, labelled buttons stacked vertically so the name is always
+        # visible (never clipped) within the half-width grid card.
+        for (kp, label, btype, cb, disabled) in acts:
+            if st.button(label, key=f"{kp}_{vid}", type=btype,
+                         use_container_width=True, disabled=disabled):
+                cb()
 
-        # Actions cell
-        with c[6]:
-            ab = st.columns(2)
-            if may_edit and ab[0].button("✏️", key=f"edt_{vid}", help=t("edit_btn")):
-                st.dialog(t("fleet_edit"), width="large")(_edit_dialog)(user, vid)
-            if may_del and ab[1].button("🗑️", key=f"del_{vid}", help=t("fleet_delete")):
-                st.dialog(t("fleet_delete"), width="large")(_delete_dialog)(user, vid, may_hard)
-        st.divider()
+
+def _vehicle_actions(user, v, may_edit, may_del, may_hard, is_rented):
+    """Typed, labelled action buttons for a card (icon + name): Edit = primary,
+    status toggles = secondary, Delete-Archive = alert/red (styled via the
+    st-key-fldel_ rule). Status toggles are disabled while the car is on an active
+    rental."""
+    vid = v["vehicle_id"]
+    acts = []  # (key_prefix, label, type, callback, disabled)
+    if may_edit:
+        acts.append(("edt", f'✏️ {t("edit_btn")}', "primary",
+                     lambda vid=vid: _open_edit(user, vid), False))
+        if v["status"] != "In Garage":
+            acts.append(("gar", f'🅿️ {t("to_garage")}', "secondary",
+                         lambda vid=vid: _set_status(user, vid, "In Garage"), is_rented))
+        if v["status"] != "Maintenance":
+            acts.append(("mnt", f'🔧 {t("to_maintenance")}', "secondary",
+                         lambda vid=vid: _set_status(user, vid, "Maintenance"), is_rented))
+        if v["status"] in ("In Garage", "Maintenance"):
+            acts.append(("avl", f'✅ {t("to_available")}', "secondary",
+                         lambda vid=vid: _set_status(user, vid, "Available"), is_rented))
+    if may_del:
+        acts.append(("fldel", f'🗑️ {t("soft_delete")}', "primary",
+                     lambda vid=vid, mh=may_hard: _open_delete(user, vid, mh), False))
+    return acts
+
+
+def _open_edit(user, vid):
+    st.dialog(t("fleet_edit"), width="large")(_edit_dialog)(user, vid)
+
+
+def _open_delete(user, vid, may_hard):
+    st.dialog(t("fleet_delete"), width="large")(_delete_dialog)(user, vid, may_hard)
 
 
 def _set_status(user, vid, status):

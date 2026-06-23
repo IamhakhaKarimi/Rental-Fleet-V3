@@ -81,6 +81,9 @@ def _token_hash(token: str) -> str:
 
 
 def create_session(username: str, remember: bool) -> tuple[str, datetime]:
+    # Opportunistic hygiene: clear any expired sessions on each new login so the
+    # table stays bounded even on long-running servers (cheap; indexed delete).
+    users_repo.purge_expired_sessions()
     token = secrets.token_urlsafe(32)
     duration = timedelta(days=REMEMBER_DAYS) if remember else timedelta(hours=SESSION_HOURS)
     expires_at = datetime.now() + duration

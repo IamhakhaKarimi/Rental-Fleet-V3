@@ -13,6 +13,9 @@ from services import licensing_service as lic
 from services import email_service
 from data.repositories import app_settings as cfg
 from data.repositories import licenses as lrepo
+from data.repositories import vehicles as vrepo
+from data.repositories import rentals as rrepo
+from data.repositories import admin_ops
 from ui import photos
 from ui.components import format_eur
 from ui.license_invoice import render_license_invoice
@@ -199,11 +202,20 @@ def _license_tab(user):
     st.caption(t("license_help"))
     ly = lic.licensed_year()
     st.info(t("license_status").format(y=ly))
-    nxt = lic.is_unlockable_next_year()
-    if st.button(t("unlock_next_year").format(y=nxt), type="primary", key="unlock_year"):
-        lic.set_licensed_year(nxt)
-        audit_service.record(user, "unlock_year", "license", str(nxt))
-        st.success(t("year_unlocked"))
+    # Super-admin designates the licensed-until year from a dropdown (current year
+    # through +10) instead of a one-step button — picking a specific year avoids
+    # accidental over/under-extension. Date pickers across the app cap at Dec 31 of
+    # this year (services/licensing_service.max_date).
+    cy = lic.current_year()
+    year_opts = list(range(cy, cy + 11))
+    default_idx = year_opts.index(ly) if ly in year_opts else 0
+    yc1, yc2 = st.columns([2, 1])
+    sel_year = yc1.selectbox(t("set_licensed_year_label"), year_opts,
+                             index=default_idx, key="lock_year_sel")
+    if yc2.button(t("save_btn"), type="primary", key="lock_year_btn"):
+        lic.set_licensed_year(int(sel_year))
+        audit_service.record(user, "set_licensed_year", "license", str(sel_year))
+        st.success(t("licensed_year_saved"))
         st.rerun()
 
     st.divider()
@@ -262,6 +274,38 @@ def _license_tab(user):
 
     st.divider()
     _smtp_section(user)
+
+    st.divider()
+    _danger_zone(user)
+
+
+# ━━━━━━━━━━━━━━ Danger zone (super-admin) — reset Finance / Fleet data
+def _danger_zone(user):
+    st.subheader(f'⚠️ {t("danger_zone")}')
+    # Two independent, confirmation-gated resets. Each requires the exact word
+    # RESET typed in, so a stray click can never wipe data. Both are audited.
+    f1, f2 = st.columns(2)
+    with f1, st.container(border=True):
+        st.markdown(f'**💰 {t("reset_finance_btn")}**')
+        st.caption(t("reset_finance_help"))
+        cf = st.text_input(t("reset_confirm_label"), key="dzc_fin")
+        if st.button(t("reset_finance_btn"), key="dzreset_fin", type="primary",
+                     use_container_width=True, disabled=cf.strip().upper() != "RESET"):
+            counts = admin_ops.reset_finance()
+            audit_service.record(user, "reset_finance", "settings", "finance", str(counts))
+            st.success(t("reset_done"))
+            st.rerun()
+    with f2, st.container(border=True):
+        st.markdown(f'**🚗 {t("reset_fleet_btn")}**')
+        st.caption(t("reset_fleet_help"))
+        cl = st.text_input(t("reset_confirm_label"), key="dzc_fleet")
+        if st.button(t("reset_fleet_btn"), key="dzreset_fleet", type="primary",
+                     use_container_width=True, disabled=cl.strip().upper() != "RESET"):
+            counts = admin_ops.reset_fleet()
+            photos.invalidate_cache()
+            audit_service.record(user, "reset_fleet", "settings", "fleet", str(counts))
+            st.success(t("reset_done"))
+            st.rerun()
 
 
 def _license_invoice_payload(rec: dict) -> dict:
@@ -394,6 +438,12 @@ def _activity_tab(user):
         st.info(t("no_activity"))
         return
 
+    # ── Return activity (admin+ may undo an archive or a cancellation) ───────
+    st.markdown(f"#### ↩️ {t('return_activity')}")
+    st.caption(t("return_activity_help"))
+    _return_activity_section(user, rows)
+    st.divider()
+
     # mask actors whose role is above the viewer's as "system admin"
     viewer_level = ROLE_LEVEL.get(user["role"], 0)
     role_map = {u["username"]: u["role"] for u in auth.all_users()}
@@ -426,3 +476,55 @@ def _activity_tab(user):
         t("col_detail"): r["detail"] or "",
     } for r in rows]
     st.dataframe(pd.DataFrame(table), use_container_width=True, hide_index=True)
+
+
+def _return_activity_section(user, rows):
+    """List reversible events still in an undoable state and offer a Return button.
+
+    Reversible = an archived vehicle (currently DELETED → restore) or a cancelled
+    rental (currently Closed → reactivate). Entries are de-duplicated by entity and
+    filtered by *current* state, so anything already restored/reactivated drops off.
+    Hard-deletes and normal rental returns are intentionally not reversible.
+    """
+    seen, items = set(), []
+    for r in rows:
+        act, ent, eid = r["action"], r["entity"], str(r["entity_id"] or "")
+        if not eid:
+            continue
+        if act == "archive_vehicle" and ent == "vehicle":
+            if ("veh", eid) in seen:
+                continue
+            seen.add(("veh", eid))
+            v = vrepo.get_vehicle(eid)
+            if v and v["status"] == "DELETED":
+                items.append(("vehicle", eid, r["id"],
+                              f'🚘 {eid} · {v.get("make_model") or "—"}'))
+        elif act == "cancel_rental" and ent == "rental":
+            if ("rent", eid) in seen:
+                continue
+            seen.add(("rent", eid))
+            d = rrepo.get_rental_full(eid)
+            if d and d["status"] == "Closed":
+                items.append(("rental", eid, r["id"],
+                              f'📋 {eid} · {d.get("client_name") or "—"} · {d.get("make_model") or "—"}'))
+
+    if not items:
+        st.caption("—")
+        return
+    for kind, eid, aid, label in items:
+        rc1, rc2 = st.columns([4, 1.3])
+        rc1.markdown(label)
+        if rc2.button(t("return_activity"), key=f"undo_{kind}_{eid}_{aid}",
+                      use_container_width=True):
+            if kind == "vehicle":
+                vrepo.restore_vehicle(eid)
+                audit_service.record(user, "restore_vehicle", "vehicle", eid, "return_activity")
+                st.toast(t("activity_returned"))
+                st.rerun()
+            else:
+                if rrepo.reactivate_rental(eid):
+                    audit_service.record(user, "reactivate_rental", "rental", eid, "return_activity")
+                    st.toast(t("activity_returned"))
+                    st.rerun()
+                else:
+                    st.warning(t("not_available_window"))

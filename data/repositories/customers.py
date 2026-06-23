@@ -35,6 +35,7 @@ def list_customers() -> list[dict]:
     # recent rental (name + role) for the "Registered by" column.
     sql = """SELECT c.customer_id, c.full_name, c.phone, c.id_passport,
                     COUNT(r.deal_id) AS rental_count,
+                    SUM(CASE WHEN r.status = 'Active' THEN 1 ELSE 0 END) AS active_count,
                     MAX(r.start_dt) AS last_rental,
                     (SELECT r2.created_by_name FROM rentals r2
                        WHERE r2.customer_id = c.customer_id

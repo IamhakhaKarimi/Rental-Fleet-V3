@@ -55,10 +55,14 @@ def status_badge(status: str) -> str:
     return f'<span class="badge {token}">{html.escape(label)}</span>'
 
 
-def kpi_tile(label_key: str, value, accent: bool = False):
+def kpi_tile(label_key: str, value, accent: bool = False, icon: str = ""):
+    """A single headline metric: an uppercase label (with an optional leading
+    icon chip aligned right) above a large, tabular-figure value."""
     cls = "kpi accent" if accent else "kpi"
+    chip = f'<span class="kpi-chip">{icon}</span>' if icon else ""
     st.markdown(
-        f'<div class="{cls}"><div class="kpi-value">{value}</div>'
-        f'<div class="kpi-label">{html.escape(t(label_key))}</div></div>',
+        f'<div class="{cls}">'
+        f'<div class="kpi-head"><span class="kpi-label">{html.escape(t(label_key))}</span>{chip}</div>'
+        f'<div class="kpi-value">{value}</div></div>',
         unsafe_allow_html=True,
     )

@@ -7,8 +7,9 @@ rendered through t_lang(key, lang). The layout is intentionally compact so the
 whole document (including the terms & conditions) prints comfortably **within a
 single A4 page** rather than spilling onto a second sheet.
 
-The same HTML is used three ways: inline preview, browser print (window.print()),
-and a downloadable standalone .html file.
+The HTML is used for the inline preview and browser print (window.print()); the
+download button serves a PDF rendered by ui/pdf.build_invoice_pdf (same content,
+deposit deducted), so the saved file is a portable PDF rather than raw HTML.
 """
 
 import html as _html
@@ -21,6 +22,7 @@ from config.roles import ROLE_LABEL_KEY
 from config.settings import APP_TAGLINE, LANGUAGES
 from config.terms import rental_terms
 from ui.components import format_eur
+from ui.pdf import build_invoice_pdf
 from data.repositories import rentals as rentals_repo
 from data.repositories import app_settings as app_cfg
 
@@ -104,56 +106,56 @@ def build_invoice_html(deal: dict, charges: list[dict], business_name: str,
     return f"""<!DOCTYPE html><html lang="{lang}"><head><meta charset="utf-8"/>
 <title>{_esc(T('invoice_heading'))} {_esc(deal.get('deal_id',''))}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
   * {{ box-sizing: border-box; }}
-  body {{ font-family:'Inter',system-ui,sans-serif; color:#0F172A; margin:0;
-         background:#F1F5F9; padding:16px; }}
+  body {{ font-family:'Inter',system-ui,sans-serif; color:#211C17; margin:0;
+         background:#F2EFE9; padding:16px; }}
   /* Compact sheet — narrower than A4 so it always fits one page */
-  .sheet {{ max-width:640px; margin:0 auto; background:#fff; border:1px solid #E2E8F0;
+  .sheet {{ max-width:640px; margin:0 auto; background:#fff; border:1px solid #E7E0D5;
             border-radius:10px; padding:20px 24px; font-size:12px; }}
   .top {{ display:flex; justify-content:space-between; align-items:flex-start;
-          border-bottom:2px solid #2563EB; padding-bottom:10px; margin-bottom:14px; }}
-  .brand {{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px;
-            color:#0F172A; line-height:1.1; }}
+          border-bottom:2px solid #0B7A55; padding-bottom:10px; margin-bottom:14px; }}
+  .brand {{ font-family:'Playfair Display',Georgia,serif; font-weight:700; font-size:17px;
+            color:#211C17; line-height:1.1; }}
   .brand small {{ display:block; font-family:'Inter'; font-weight:500; font-size:9px;
-                  letter-spacing:.12em; text-transform:uppercase; color:#64748B; margin-top:3px; }}
+                  letter-spacing:.12em; text-transform:uppercase; color:#736B60; margin-top:3px; }}
   .inv-title {{ text-align:right; }}
-  .inv-title h1 {{ font-family:'Space Grotesk',sans-serif; font-size:20px; margin:0;
-                   color:#2563EB; letter-spacing:.03em; }}
+  .inv-title h1 {{ font-family:'Playfair Display',Georgia,serif; font-size:20px; margin:0;
+                   color:#0B7A55; letter-spacing:.03em; }}
   .meta {{ font-size:11px; color:#475569; margin-top:4px; line-height:1.5; }}
-  .meta b {{ color:#0F172A; }}
+  .meta b {{ color:#211C17; }}
   .cols {{ display:flex; gap:22px; margin-bottom:12px; }}
   .cols .box {{ flex:1; }}
   .lbl {{ font-size:9px; font-weight:600; letter-spacing:.07em; text-transform:uppercase;
-          color:#64748B; margin-bottom:3px; }}
+          color:#736B60; margin-bottom:3px; }}
   .val {{ font-size:12px; line-height:1.5; }}
   table {{ width:100%; border-collapse:collapse; margin-top:4px; }}
   th {{ text-align:left; font-size:9px; letter-spacing:.05em; text-transform:uppercase;
-        color:#64748B; border-bottom:1px solid #E2E8F0; padding:5px 5px; }}
-  td {{ font-size:12px; padding:6px 5px; border-bottom:1px solid #F1F5F9; }}
+        color:#736B60; border-bottom:1px solid #E7E0D5; padding:5px 5px; }}
+  td {{ font-size:12px; padding:6px 5px; border-bottom:1px solid #F2EFE9; }}
   td.num, th.num {{ text-align:right; }}
   tr.soft td {{ color:#475569; }}
   .totals {{ margin-top:8px; display:flex; justify-content:flex-end; }}
   .totals table {{ width:auto; min-width:220px; }}
   .totals td {{ border:none; padding:3px 5px; }}
-  .grand td {{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px;
-               color:#0F172A; border-top:2px solid #0F172A; padding-top:7px; }}
-  .grand td.num {{ color:#2563EB; }}
+  .grand td {{ font-family:'Playfair Display',Georgia,serif; font-weight:700; font-size:15px;
+               color:#211C17; border-top:2px solid #211C17; padding-top:7px; }}
+  .grand td.num {{ color:#0B7A55; }}
   .chip {{ display:inline-block; font-size:9px; font-weight:600; padding:2px 8px;
-           border-radius:999px; background:#EEF2FF; color:#2563EB; margin-top:10px; }}
+           border-radius:999px; background:#E3F2EC; color:#0B7A55; margin-top:10px; }}
   /* Terms & conditions — small two-column list so it still fits one A4 page */
   .terms {{ margin-top:14px; padding-top:10px; border-top:1px dashed #CBD5E1; }}
-  .terms h3 {{ font-family:'Space Grotesk',sans-serif; font-size:11px; margin:0 0 6px;
-               text-transform:uppercase; letter-spacing:.04em; color:#0F172A; }}
+  .terms h3 {{ font-family:'Playfair Display',Georgia,serif; font-size:11px; margin:0 0 6px;
+               text-transform:uppercase; letter-spacing:.04em; color:#211C17; }}
   .terms ol {{ margin:0; padding-left:16px; columns:2; column-gap:20px;
                font-size:8.2px; line-height:1.35; color:#475569; }}
   .terms li {{ margin-bottom:3px; break-inside:avoid; }}
-  .foot {{ margin-top:12px; font-size:9px; color:#64748B; line-height:1.5; }}
+  .foot {{ margin-top:12px; font-size:9px; color:#736B60; line-height:1.5; }}
   .toolbar {{ max-width:640px; margin:0 auto 10px; text-align:right; }}
   .toolbar button {{ font-family:'Inter',sans-serif; font-size:12px; font-weight:600;
-           background:#2563EB; color:#fff; border:none; border-radius:8px;
+           background:#0B7A55; color:#fff; border:none; border-radius:8px;
            padding:7px 14px; cursor:pointer; }}
-  .toolbar button:hover {{ background:#1D4ED8; }}
+  .toolbar button:hover {{ background:#095E42; }}
   @media print {{
     @page {{ size: A4; margin: 10mm; }}
     body {{ background:#fff; padding:0; }}
@@ -238,8 +240,9 @@ def render_invoice(deal_id: str, key_prefix: str = "inv", lang: str | None = Non
     )
     doc = build_invoice_html(deal, charges, business, lang=chosen, logo=logo)
     components.html(doc, height=760, scrolling=True)
+    pdf_bytes = build_invoice_pdf(deal, charges, business, lang=chosen, logo=logo)
     st.download_button(
-        t("invoice_download"), data=doc,
-        file_name=f"invoice_{deal_id}_{chosen}.html", mime="text/html",
+        t("invoice_download"), data=pdf_bytes,
+        file_name=f"invoice_{deal_id}_{chosen}.pdf", mime="application/pdf",
         key=f"{key_prefix}_dl_{deal_id}", use_container_width=True,
     )

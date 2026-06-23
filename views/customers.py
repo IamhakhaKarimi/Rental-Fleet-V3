@@ -63,13 +63,40 @@ def render_customers(user):
             st.info(t("no_customers"))
             return
 
-    top = st.columns([1, 3])
-    if top[0].button(f'📋 {t("open_full_table")}', key="cust_fulltable",
-                     use_container_width=True):
-        _full_table_dialog(customers)
-    top[1].caption(f'{len(customers)} · {t("customers_title")}')
+    # Split: customers with a rental ACTIVE right now get the card view; everyone
+    # else (finished contracts / no live rental) drops to the full table below.
+    active = [c for c in customers if (c.get("active_count") or 0) > 0]
+    finished = [c for c in customers if (c.get("active_count") or 0) == 0]
 
-    # minimalist card grid
+    # ── Active renters — compact card grid ──────────────────────────────────
+    st.subheader(f'🟢 {t("active_renters")} · {len(active)}')
+    if not active:
+        st.caption(t("no_active_renters"))
+    else:
+        _customer_cards(user, active)
+
+    st.divider()
+
+    # ── Everyone else (finished contracts) — the full customers table ───────
+    st.subheader(f'📋 {t("all_customers")} · {len(finished)}')
+    if not finished:
+        st.caption("—")
+        return
+    _customers_table(finished)
+    # Keep per-customer actions (history / reprint invoice / edit) reachable for
+    # finished clients without cluttering the table: pick one and open its dialog.
+    labels = {c["customer_id"]: f'{c["full_name"]} · {c["phone"] or "—"}' for c in finished}
+    oc = st.columns([3, 1])
+    pick = oc[0].selectbox(t("open_customer"), [c["customer_id"] for c in finished],
+                           format_func=lambda i: labels[i], key="fin_pick",
+                           label_visibility="collapsed")
+    if oc[1].button(f'📂 {t("open_customer")}', key="fin_open", use_container_width=True):
+        _customer_dialog(user, next(c for c in finished if c["customer_id"] == pick))
+
+
+# ─────────────────────────────── sections ──────────────────────────────────
+def _customer_cards(user, customers):
+    """Minimalist card grid (used for the currently-renting customers)."""
     per_row = 3
     for i in range(0, len(customers), per_row):
         cols = st.columns(per_row)
@@ -86,20 +113,21 @@ def render_customers(user):
                     _customer_dialog(user, c)
 
 
+def _customers_table(customers):
+    """Full customers table (used for finished-contract customers)."""
+    rows = [{
+        t("col_id"):            c["customer_id"],
+        t("client_name"):       c["full_name"],
+        t("col_phone"):         c["phone"] or "—",
+        t("col_idno"):          c["id_passport"] or "—",
+        t("col_rentals"):       c["rental_count"],
+        t("col_last_rental"):   (c["last_rental"] or "—")[:10],
+        t("col_registered_by"): _who(c.get("last_by_name"), c.get("last_by_role")),
+    } for c in customers]
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+
+
 # ─────────────────────────────── dialogs ───────────────────────────────────
-def _full_table_dialog(customers):
-    def body():
-        rows = [{
-            t("col_id"):            c["customer_id"],
-            t("client_name"):       c["full_name"],
-            t("col_phone"):         c["phone"] or "—",
-            t("col_idno"):          c["id_passport"] or "—",
-            t("col_rentals"):       c["rental_count"],
-            t("col_last_rental"):   (c["last_rental"] or "—")[:10],
-            t("col_registered_by"): _who(c.get("last_by_name"), c.get("last_by_role")),
-        } for c in customers]
-        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
-    st.dialog(t("customers_title"), width="large")(body)()
 
 
 def _customer_dialog(user, cust):

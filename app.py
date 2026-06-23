@@ -17,6 +17,7 @@ import extra_streamlit_components as stx
 
 from config.settings import APP_NAME, APP_TAGLINE, PAGE_ICON, APP_VERSION
 from config.i18n import init_lang, t
+from config.roles import can
 from ui.theme import inject_theme
 from core.db import init_db
 from ui import auth_view
@@ -32,7 +33,7 @@ st.set_page_config(
     page_title=f"{APP_NAME} · {APP_TAGLINE} v{APP_VERSION}",
     page_icon=PAGE_ICON,
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",   # nav now lives in a collapsible sidebar
 )
 
 
@@ -68,6 +69,13 @@ user = auth_view.ensure_authenticated(cookie_mgr, cookies)
 
 # Top nav (returns the selected page key)
 page = top_nav(user, cookie_mgr, cookies)
+
+# Defense-in-depth: even if a page key were forced, a visitor can't reach the
+# management pages and only admins reach finance. The nav already hides these.
+if page in ("reservations", "fleet", "customers") and not can(user, "view_management"):
+    page = "dashboard"
+if page == "finance" and not can(user, "view_finance"):
+    page = "dashboard"
 
 # Router
 {

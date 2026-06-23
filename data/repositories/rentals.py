@@ -1,6 +1,7 @@
 """Rentals repository — create, list, cancel, and overdue detection."""
 from datetime import datetime
 from sqlalchemy import text
+from config.settings import LANGUAGES, DEFAULT_LANG
 from core.db import get_engine
 from data.repositories.customers import get_or_create_customer
 
@@ -105,7 +106,7 @@ def create_rental(*, vehicle_id, make_model, client_name, phone, id_passport,
                "e": end_dt.strftime("%Y-%m-%dT%H:%M:%S"),
                "d": int(days), "rate": daily_rate_cents, "total": total, "dep": deposit_cents,
                "cby": created_by or "", "cbn": created_by_name or "", "cbr": created_by_role or "",
-               "ilang": invoice_lang if invoice_lang in ("tr", "en") else "tr"})
+               "ilang": invoice_lang if invoice_lang in LANGUAGES else DEFAULT_LANG})
         conn.execute(text(
             "INSERT INTO charges (deal_id,vehicle_id,type,amount) VALUES (:did,:vid,'rental',:a)"
         ), {"did": deal_id, "vid": vehicle_id, "a": total})
@@ -137,6 +138,29 @@ def cancel_rental(deal_id: str):
             conn.execute(text(
                 "UPDATE vehicles SET status='Available',updated_at=datetime('now') WHERE vehicle_id=:v"
             ), {"v": vid})
+
+
+def reactivate_rental(deal_id: str) -> bool:
+    """Undo a cancellation: set the rental back to 'Active' and re-reserve its
+    vehicle. Returns False (no-op) if the rental is missing or its car is already
+    held by a different active rental."""
+    with get_engine().begin() as conn:
+        row = conn.execute(text(
+            "SELECT vehicle_id, status FROM rentals WHERE deal_id=:d"), {"d": deal_id}
+        ).mappings().first()
+        if not row:
+            return False
+        vid = row["vehicle_id"]
+        clash = conn.execute(text(
+            "SELECT 1 FROM rentals WHERE vehicle_id=:v AND status='Active' "
+            "AND deal_id<>:d LIMIT 1"), {"v": vid, "d": deal_id}).first()
+        if clash:
+            return False
+        conn.execute(text("UPDATE rentals SET status='Active' WHERE deal_id=:d"), {"d": deal_id})
+        conn.execute(text(
+            "UPDATE vehicles SET status='Rented', updated_at=datetime('now') WHERE vehicle_id=:v"
+        ), {"v": vid})
+    return True
 
 
 def settle_and_close(deal_id: str, vehicle_id: str, late_cents: int,

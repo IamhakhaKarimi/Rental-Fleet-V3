@@ -1,18 +1,27 @@
 """
-Top navigation bar — language switcher included.
+Primary navigation — a minimalistic **two-state sidebar** (Gemini-style) on the left.
 
-The language is chosen per-user in Settings → Language (and remembered across
-logins), so the top bar no longer carries a language toggle. The sidebar is kept
-collapsed to maximise the content area.
+Rendered with native Streamlit widgets inside ``st.sidebar``: a custom collapse
+toggle on top, then a brand header (mark + name + tagline), the main sections as
+left-aligned icon+label rows, and a bottom-pinned footer with the reminders bell,
+settings, the account row (avatar + name + role) and logout. A click on the toggle
+flips ``session_state['nav_expanded']`` between an EXPANDED label list and a slim
+COLLAPSED icon rail — the sidebar is never hidden, so the icons stay reachable, and
+page content reflows because the rail keeps a real (non-zero) width. The light
+surface, rounded hover highlight, soft-emerald active state and the per-state width
+all live in ui/theme.py (the collapsed rail hides labels purely in CSS). Section
+modules still live in views/ (not pages/), so Streamlit builds no native page menu.
 
-The section menu is built from native **emoji + label** Streamlit buttons (one per
-visible section). This is deliberate:
-  - `streamlit-option-menu` renders inside an iframe that collapses to 0px height
-    on Streamlit 1.58, hiding the whole nav — native buttons can't fail that way.
-  - The label is always shown (icons alone are ambiguous, and mobile has no hover
-    tooltip). On a phone the columns stack vertically (see the responsive CSS in
-    ui/theme.py), so each section name reads clearly on its own row.
+We drive collapse ourselves (Streamlit's native «/» is hidden in ui/theme.py)
+because the native control only does full-or-hidden and its state isn't readable
+from Python — we need a slim icon rail and must know the state to size it.
+
+Why native buttons (not streamlit-option-menu): that component renders in an iframe
+that collapses to 0px on Streamlit 1.58, hiding the nav — native buttons can't fail
+that way and style cleanly as sidebar rows.
 """
+import html
+
 import streamlit as st
 from config.i18n import t, init_lang
 from config.roles import can, ROLE_LABEL_KEY
@@ -21,79 +30,110 @@ from data.repositories import app_settings as app_cfg
 from ui import auth_view
 from ui.notifications import render_bell
 
-# (page key, translation key, emoji icon shown on the nav button — matches the
-# emoji each page uses in its own title)
+# (page key, translation key, icon). Icons are Material Symbols rendered via
+# Streamlit's `:material/<name>:` directive — clean, monochrome line icons that
+# inherit the button's text colour (ink when idle, emerald when the section is
+# active), matching the minimalist Gemini-style rail.
 NAV_ITEMS = [
-    ("dashboard",    "nav_dashboard",    "🏠"),
-    ("reservations", "nav_reservations", "📋"),
-    ("fleet",        "nav_fleet",        "🚘"),
-    ("customers",    "nav_customers",    "👥"),
-    ("finance",      "nav_finance",      "💰"),
-    ("settings",     "nav_settings",     "⚙️"),
+    ("dashboard",    "nav_dashboard",    ":material/home:"),
+    ("reservations", "nav_reservations", ":material/calendar_month:"),
+    ("fleet",        "nav_fleet",        ":material/directions_car:"),
+    ("customers",    "nav_customers",    ":material/group:"),
+    ("finance",      "nav_finance",      ":material/payments:"),
+    ("settings",     "nav_settings",     ":material/settings:"),
 ]
 
-_STICKY = """
-<style>
-/* sticky top bar */
-section[data-testid="stMain"] > div > div.stMainBlockContainer > div:first-child {
-    position: sticky; top: 0; z-index: 999;
-    background: #fff; padding-bottom: 6px;
-    box-shadow: 0 4px 12px -8px rgba(15,23,42,.18);
-}
-/* hide sidebar toggle */
-button[data-testid="baseButton-headerNoPadding"] { display:none !important; }
-</style>
-"""
+# Pages a plain visitor must never see (management surface area).
+_MANAGEMENT_PAGES = {"reservations", "fleet", "customers"}
+
+
+def _initial(s: str, fallback: str = "B") -> str:
+    s = (s or "").strip()
+    return s[:1].upper() if s else fallback
 
 
 def top_nav(user, cookie_mgr, cookies) -> str:
-    st.markdown(_STICKY, unsafe_allow_html=True)
+    """Render the two-state navigation sidebar: a collapse toggle, brand header,
+    the main sections as icon+label rows (icons-only when collapsed), then a
+    bottom-pinned footer with the reminders bell, settings, the account row and
+    logout. Returns the selected page key.
 
-    # ── utility row ────────────────────────────────────────────────────────
-    brand_col, spacer, user_col, bell_col, logout_col = st.columns([3, 1, 2.2, 0.9, 1.4])
-    with brand_col:
+    Sections, role-gating, widget keys and routing are unchanged — only the
+    presentation (expanded list ⇄ collapsed icon rail) is driven from here +
+    ui/theme.py via session_state['nav_expanded']."""
+    def _hidden(k: str) -> bool:
+        # Visitors (level 0) get no management pages — Reservations/Fleet/Customers
+        # are hidden, leaving Home + Settings. Finance stays admin+.
+        if k == "finance" and not can(user, "view_finance"):
+            return True
+        if k in _MANAGEMENT_PAGES and not can(user, "view_management"):
+            return True
+        return False
+
+    with st.sidebar:
+        # Custom collapse/expand toggle. Streamlit's native one is hidden in
+        # ui/theme.py and only does full/hidden; ours switches between an expanded
+        # label list and a slim icon rail (and Python can't read the native state,
+        # so we must own it). inject_theme() reads this same flag to size the rail.
+        expanded = st.session_state.setdefault("nav_expanded", True)
+        if st.button(":material/menu_open:" if expanded else ":material/menu:",
+                     key="nav_toggle", use_container_width=True):
+            st.session_state.nav_expanded = not expanded
+            st.rerun()
+
+        # Brand header: mark + name + tagline
+        business = app_cfg.get_business_name()
         st.markdown(
-            f'<div style="font-family:\'Space Grotesk\',sans-serif;font-weight:700;'
-            f'font-size:20px;color:#0F172A;line-height:1.1;padding-top:6px">'
-            f'{app_cfg.get_business_name()}'
-            f'<span style="font-size:11px;font-weight:400;color:#64748B;margin-left:8px">'
-            f'{APP_TAGLINE} · v{APP_VERSION}</span></div>',
+            f'<div class="rail-brand-row" title="{html.escape(business)} · {APP_TAGLINE} v{APP_VERSION}">'
+            f'<div class="rail-brand-mark">{_initial(business)}</div>'
+            f'<div class="rail-brand-text">'
+            f'<div class="rbt-name">{html.escape(business)}</div>'
+            f'<div class="rbt-tag">{html.escape(APP_TAGLINE)}</div>'
+            f'</div></div>',
             unsafe_allow_html=True,
         )
-    with user_col:
-        role_label = t(ROLE_LABEL_KEY.get(user["role"], "role_visitor"))
-        st.caption(
-            f'{t("signed_in_as")} **{user["full_name"] or user["username"]}**'
-            f'&nbsp;·&nbsp;{role_label}',
-            unsafe_allow_html=True,
-        )
-    with bell_col:
+
+        valid = [k for k, _, _ in NAV_ITEMS if not _hidden(k)]
+        if st.session_state.get("current_page") not in valid:
+            st.session_state.current_page = "dashboard"
+
+        # Main sections (icon-only; Settings is pinned in the footer below)
+        for key, label_key, emoji in NAV_ITEMS:
+            if key == "settings" or _hidden(key):
+                continue
+            is_active = st.session_state.current_page == key
+            if st.button(f"{emoji} {t(label_key)}", key=f"nav_{key}", help=t(label_key),
+                         type="primary" if is_active else "secondary",
+                         use_container_width=True):
+                if not is_active:
+                    st.session_state.current_page = key
+                    st.rerun()
+
+        # Spacer pushes the footer group to the bottom of the rail
+        st.markdown('<div class="rail-spacer"></div>', unsafe_allow_html=True)
+
+        # Footer: reminders bell · settings · account avatar · logout
         if can(user, "create_reservation"):
             render_bell(user)
-    with logout_col:
-        if st.button(f'🚪 {t("logout")}', key="logout_btn", use_container_width=True):
+        is_settings = st.session_state.current_page == "settings"
+        if st.button(f":material/settings: {t('nav_settings')}", key="nav_settings", help=t("nav_settings"),
+                     type="primary" if is_settings else "secondary",
+                     use_container_width=True):
+            if not is_settings:
+                st.session_state.current_page = "settings"
+                st.rerun()
+        name = user["full_name"] or user["username"]
+        role_label = t(ROLE_LABEL_KEY.get(user["role"], "role_visitor"))
+        st.markdown(
+            f'<div class="rail-user-row" title="{html.escape(name)} · {html.escape(role_label)}">'
+            f'<div class="rail-user-avatar">{_initial(name, "U")}</div>'
+            f'<div class="rail-user-text">'
+            f'<div class="ru-name">{html.escape(name)}</div>'
+            f'<div class="ru-role">{html.escape(role_label)}</div>'
+            f'</div></div>',
+            unsafe_allow_html=True,
+        )
+        if st.button(f":material/logout: {t('logout')}", key="logout_btn", help=t("logout"), use_container_width=True):
             auth_view.logout(cookie_mgr, cookies)
 
-    # ── section menu (compact icon buttons; name in tooltip) ───────────────
-    items = [(k, lk, emoji) for k, lk, emoji in NAV_ITEMS
-             if not (k == "finance" and not can(user, "view_finance"))]
-    keys = [k for k, _, _ in items]
-
-    # keep the selected page valid (e.g. Finance hidden for low roles)
-    if st.session_state.get("current_page") not in keys:
-        st.session_state.current_page = "dashboard"
-
-    # Equal-width segments on desktop; these stack into full-width rows on mobile
-    # (responsive CSS in ui/theme.py), so the section name is always legible.
-    cols = st.columns(len(items))
-    for (key, label_key, emoji), col in zip(items, cols):
-        is_active = st.session_state.current_page == key
-        if col.button(f"{emoji} {t(label_key)}", key=f"nav_{key}",
-                      type="primary" if is_active else "secondary",
-                      use_container_width=True):
-            if not is_active:
-                st.session_state.current_page = key
-                st.rerun()
-
-    st.divider()
     return st.session_state.current_page

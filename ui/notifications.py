@@ -82,7 +82,8 @@ def render_bell(user):
     active = rrepo.list_active_rentals_with_vehicle()
     overdue, soon = _classify(active)
     n = len(overdue) + len(soon)
-    label = f"🔔 {n}" if n else "🔔"
+    # Material line icon (matches the nav rail); append the count when there is one.
+    label = f":material/notifications: {n}" if n else ":material/notifications:"
     btn_type = "primary" if overdue else "secondary"
     if st.button(label, key="notif_bell", help=t("notifications_title"),
                  type=btn_type, use_container_width=True):

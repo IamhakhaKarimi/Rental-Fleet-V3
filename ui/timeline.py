@@ -59,31 +59,31 @@ def render_timeline(vehicles: list[dict], rentals: list[dict]):
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
         body {{ margin:0; font-family:'Inter',system-ui,sans-serif; background:transparent; }}
         #tlwrap {{ position:relative; }}
-        #tl {{ border:1px solid #E2E8F0; border-radius:14px; padding:6px; background:#fff; }}
+        #tl {{ border:1px solid #EAE8E3; border-radius:14px; padding:6px; background:#fff; }}
         .vis-timeline {{ border:none; font-family:'Inter',system-ui,sans-serif; }}
-        .vis-labelset .vis-label {{ color:#0F172A; font-weight:500; font-size:12.5px; }}
-        .vis-time-axis .vis-text {{ color:#64748B; font-size:11px; }}
+        .vis-labelset .vis-label {{ color:#1A1C1E; font-weight:500; font-size:12.5px; }}
+        .vis-time-axis .vis-text {{ color:#6B7280; font-size:11px; }}
         .vis-item {{ border:none; border-radius:7px; color:#fff; font-size:11.5px; font-weight:600; padding:1px 6px; }}
         .vis-item.rented {{ background:#2563EB; }}
-        .vis-item.duesoon {{ background:#D97706; }}   /* due within 24h (alert) */
+        .vis-item.duesoon {{ background:#D97706; color:#1A1C1E; }}   /* due within 24h (alert) — dark text for AA contrast on amber */
         .vis-item.overdue {{ background:#DC2626; }}   /* past deadline (alarm) */
         .vis-tooltip {{ font-family:'Inter',system-ui,sans-serif !important; font-size:12px !important;
-            background:#0F172A !important; color:#F8FAFC !important; border:none !important;
+            background:#1A1C1E !important; color:#F8FAFC !important; border:none !important;
             border-radius:8px !important; padding:9px 12px !important; line-height:1.5 !important;
             box-shadow:0 10px 25px -5px rgba(0,0,0,.35) !important; }}
         /* "now" custom time line + its bottom text label */
-        .vis-custom-time.nowline {{ background-color:#0F172A; width:2px; }}
+        .vis-custom-time.nowline {{ background-color:#1A1C1E; width:2px; }}
         .vis-custom-time.nowline .vis-custom-time-marker {{
-            top:auto !important; bottom:0 !important; background:#0F172A; color:#fff;
+            top:auto !important; bottom:0 !important; background:#1A1C1E; color:#fff;
             font-size:10px; font-weight:700; letter-spacing:.05em; padding:1px 6px;
             border-radius:4px; white-space:nowrap; cursor:default; }}
         /* zoom controls, bottom-right */
         .zoom-controls {{ position:absolute; right:14px; bottom:14px; display:flex;
             flex-direction:column; gap:6px; z-index:50; }}
-        .zoom-controls button {{ width:34px; height:34px; border:1px solid #E2E8F0; background:#fff;
-            border-radius:8px; font-size:20px; font-weight:700; color:#0F172A; cursor:pointer;
+        .zoom-controls button {{ width:34px; height:34px; border:1px solid #EAE8E3; background:#fff;
+            border-radius:8px; font-size:20px; font-weight:700; color:#1A1C1E; cursor:pointer;
             box-shadow:0 2px 6px rgba(0,0,0,.10); line-height:1; }}
-        .zoom-controls button:hover {{ background:#EEF2FF; border-color:#2563EB; color:#2563EB; }}
+        .zoom-controls button:hover {{ background:#F2EFE9; border-color:#0B7A55; color:#0B7A55; }}
       </style>
     </head><body>
       <div id="tlwrap">
